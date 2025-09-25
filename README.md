@@ -80,7 +80,7 @@ docker images
 4. **RESTful API** - Node.js application with MongoDB integration
 5. **Health Monitor** - Python Flask service for application monitoring
 
-**Learning Stats:** hands-on | 5 applications | 10+ containers deployed 
+**Learning Stats:** Hands-On | 5 applications | 10+ containers deployed 
 
 ---
 
@@ -99,4 +99,5 @@ Advanced container orchestration, scaling, and cloud-native application deployme
 
 **Current Phase:** Docker Mastery Complete ✅  
 **Next Phase:** Kubernetes Learning 🚀
+
 ``` -->
