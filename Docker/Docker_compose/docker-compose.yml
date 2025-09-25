@@ -1,0 +1,24 @@
+# docker-compose.yml
+# version: '3' # we dont need to mention version in docker compose file as its not required to mention here any more.
+services:
+ python_service:
+   build:
+     context: .
+     dockerfile: Dockerfile.python
+     args:
+      - BASE_IMAGE=python:latest
+      - APP_VERSION=2.0
+   environment:
+     - DEBUG=true
+   image: verdhiya/python_web:1.0
+
+ node_service:
+   build:
+     context: .
+     dockerfile: Dockerfile.node
+     args:
+       - BASE_IMAGE=node:latest
+       - APP_NAME=my-nodejs-app
+   environment:
+     - NODE_ENV=development
+   image: verdhiya/node_web:1.0
