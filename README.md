@@ -1,4 +1,4 @@
-```markdown
+```
 # Docker & Kubernetes
 
 Complete Containerization to orchestration learning path with hands-on projects and real-world applications.
