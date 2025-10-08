@@ -11,6 +11,6 @@ Learned safe node maintenance procedures using drain/cordon/uncordon.
 
 ## Key Learning
 
-Standalone pods vs Deployment-managed pods behave differently when drained:
-- Standalone pods: Deleted permanently
-- Deployment pods: Recreated on other nodes (zero downtime)
+**Standalone pods** vs **Deployment-managed pods** behave differently when drained:
+- **Standalone pods:** Deleted permanently
+- **Deployment pods:** Recreated on other nodes (zero downtime)
