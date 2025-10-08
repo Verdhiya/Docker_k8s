@@ -26,26 +26,29 @@ Complete containerization to orchestration learning path with hands-on projects 
 
 ### Essential Commands Used
 
+#### Container Management
 ```bash
-# Container Management
 docker run -d -p 8080:80 nginx
 docker ps -a
 docker logs <container-name>
 docker exec -it <container> bash
 docker stop/start/restart <container>
-
-# Volume & Bind Mounts
+```
+#### Volume & Bind Mounts
+```bash
 docker run -d -v mysql_data:/var/lib/mysql mysql:8.4
 docker run -d --mount type=bind,source=/host/path,target=/container/path nginx
-
-# Docker Compose
+```
+#### Docker Compose
+```bash
 docker compose up -d
 docker compose down
 docker compose logs -f
 docker compose ps
 docker compose exec <service> bash
-
-# Image Building
+```
+#### Image Building
+```bash
 docker build -t custom-app .
 docker images
 ```
@@ -101,3 +104,4 @@ Advanced container orchestration, scaling, and cloud-native application deployme
 **Next Phase:** Kubernetes Learning 🚀
 
 ``` -->
+
