@@ -9,10 +9,10 @@
 
 ## Setup Overview
 
-1. Configure all 3 nodes (master + workers)
-2. Initialize master node
-3. Join worker nodes to cluster
-4. Verify cluster health
+#### 1. Configure all 3 nodes (master + workers)
+#### 2. Initialize master node
+#### 3. Join worker nodes to cluster
+#### 4. Verify cluster health
 
 ## Result
 
