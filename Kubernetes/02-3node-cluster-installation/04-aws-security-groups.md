@@ -11,9 +11,9 @@
 
 ## Configuration Steps
 
-1. EC2 → Security Groups → Select your SG
-2. Edit inbound rules
-3. Add the 4 rules above
-4. Save rules
+#### 1. EC2 → Security Groups → Select your SG
+#### 2. Edit inbound rules
+#### 3. Add the 4 rules above
+#### 4. Save rules
 
 **Critical:** The "All Traffic from Same SG" rule allows all nodes to communicate internally.
