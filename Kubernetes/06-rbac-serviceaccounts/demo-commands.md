@@ -15,13 +15,13 @@ kubectl apply -f pod-default-sa.yaml
 ```bash
 kubectl exec -n sa-demo default-sa-pod -- kubectl get pods -n sa-demo
 ```
-# Error: Forbidden ✅
+**Error: Forbidden ✅**
 
 ## Test Custom SA (Has Permissions)
 ```bash
 kubectl exec -n sa-demo app-reader-pod -- kubectl get pods -n sa-demo
 ```
-# Success: Lists pods ✅
+**Success: Lists pods ✅**
 
 ## Verification
 ```bash
@@ -29,5 +29,5 @@ kubectl get serviceaccounts -n sa-demo
 kubectl get roles -n sa-demo
 kubectl get rolebindings -n sa-demo
 kubectl auth can-i list pods --as=system:serviceaccount:sa-demo:app-reader -n sa-demo
-
+```
 
