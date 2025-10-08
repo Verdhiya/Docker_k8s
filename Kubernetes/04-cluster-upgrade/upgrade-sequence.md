@@ -9,10 +9,11 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-v1.32-apt-keyring.gpg] https:/
 
 ```
 ## Upgrade Order
-1. Master node → v1.32.9
-2. Worker-1 → v1.32.9
-3. Worker-2 → v1.32.9
-4. Verify all nodes: kubectl get nodes
+
+#### 1. Master node → v1.32.9
+#### 2. Worker-1 → v1.32.9
+#### 3. Worker-2 → v1.32.9
+#### 4. Verify all nodes: kubectl get nodes
 
 ## Phase 3: v1.32.9 → v1.33.5
 Repeat process with v1.33 repository and version 1.33.5-1.1
