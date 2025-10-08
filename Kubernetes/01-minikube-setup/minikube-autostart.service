@@ -1,0 +1,19 @@
+[Unit]
+Description=Minikube Kubernetes Cluster
+After=network-online.target containerd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/sysctl -w fs.protected_regular=0
+ExecStartPre=/bin/sh -c 'rm -rf /tmp/juju-* /tmp/minikube* /tmp/mk* 2>/dev/null || true'
+ExecStart=/usr/local/bin/minikube start --vm-driver=none
+ExecStop=/usr/local/bin/minikube stop
+TimeoutStartSec=300
+TimeoutStopSec=120
+User=root
+Environment="HOME=/root"
+
+[Install]
+WantedBy=multi-user.target
