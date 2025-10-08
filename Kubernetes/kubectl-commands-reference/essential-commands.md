@@ -9,6 +9,7 @@ kubectl get nodes -o wide
 kubectl version
 
 ---
+
 ## Pods
 ```bash
 kubectl get pods
@@ -21,6 +22,7 @@ kubectl exec -it <pod-name> -- bash
 kubectl delete pod <pod-name>
 
 ---
+
 ## Deployments
 ```bash
 kubectl create deployment <name> --image=<image>
@@ -32,6 +34,7 @@ kubectl rollout undo deployment/<name>
 kubectl delete deployment <name>
 
 ---
+
 ## Services
 ```bash
 kubectl expose deployment <name> --port=80 --type=NodePort
@@ -40,6 +43,7 @@ kubectl describe service <name>
 kubectl delete service <name>
 
 ---
+
 ## Namespaces
 ```bash
 kubectl create namespace <name>
@@ -48,6 +52,7 @@ kubectl get pods -n <namespace>
 kubectl delete namespace <name>
 
 ---
+
 ## RBAC
 ```bash
 kubectl get roles -A
@@ -57,6 +62,7 @@ kubectl auth can-i <verb> <resource> -n <namespace>
 kubectl auth can-i --list -n <namespace>
 
 ---
+
 ## Node Management
 ```bash
 kubectl drain <node> --ignore-daemonsets
@@ -65,6 +71,7 @@ kubectl uncordon <node>
 kubectl describe node <node>
 
 ---
+
 ## Troubleshooting
 ```bash
 kubectl describe <resource> <name>
