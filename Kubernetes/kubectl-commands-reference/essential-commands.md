@@ -7,11 +7,11 @@ kubectl cluster-info
 kubectl get nodes
 kubectl get nodes -o wide
 kubectl version
+```
 
----
 
 ## Pods
-```bash
+```
 kubectl get pods
 kubectl get pods -A
 kubectl get pods -o wide
@@ -20,11 +20,11 @@ kubectl logs <pod-name>
 kubectl logs -f <pod-name>
 kubectl exec -it <pod-name> -- bash
 kubectl delete pod <pod-name>
+```
 
----
 
 ## Deployments
-```bash
+```
 kubectl create deployment <name> --image=<image>
 kubectl get deployments
 kubectl scale deployment <name> --replicas=<number>
@@ -32,51 +32,51 @@ kubectl rollout status deployment/<name>
 kubectl rollout history deployment/<name>
 kubectl rollout undo deployment/<name>
 kubectl delete deployment <name>
+```
 
----
 
 ## Services
-```bash
+```
 kubectl expose deployment <name> --port=80 --type=NodePort
 kubectl get services
 kubectl describe service <name>
 kubectl delete service <name>
+```
 
----
 
 ## Namespaces
-```bash
+```
 kubectl create namespace <name>
 kubectl get namespaces
 kubectl get pods -n <namespace>
 kubectl delete namespace <name>
+```
 
----
 
 ## RBAC
-```bash
+```
 kubectl get roles -A
 kubectl get rolebindings -A
 kubectl get serviceaccounts -A
 kubectl auth can-i <verb> <resource> -n <namespace>
 kubectl auth can-i --list -n <namespace>
+```
 
----
 
 ## Node Management
-```bash
+```
 kubectl drain <node> --ignore-daemonsets
 kubectl cordon <node>
 kubectl uncordon <node>
 kubectl describe node <node>
+```
 
----
 
 ## Troubleshooting
-```bash
+```
 kubectl describe <resource> <name>
 kubectl logs <pod-name>
 kubectl get events --sort-by='.lastTimestamp'
 kubectl get pods -o yaml
 kubectl explain <resource>
-
+```
