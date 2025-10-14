@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-besteffort
+spec:
+  containers:
+  - name: app
+    image: alpine
+    command: ["sleep", "3600"]
+  # No resources section
