@@ -1,5 +1,7 @@
 # Kubernetes Hands-On Learning
 
+---
+
 ## Learning Journey Overview
 
 ### Project Sequence
@@ -25,35 +27,31 @@
 - AWS EC2 (t2.medium)
 
 ### Skills Acquired
-
-**Cluster Management:**
-✅ Cluster installation and configuration  
-✅ Multi-version upgrades (3 phases)  
-✅ Node operations and maintenance  
-✅ Zero-downtime procedures  
-✅ Automated cluster startup (systemd)  
-
-**Security & Access Control:**
-✅ RBAC security implementation  
-✅ Certificate-based authentication  
-✅ ServiceAccount permissions  
-✅ Secret management  
-✅ HTTP basic authentication (htpasswd)  
-
-**Application Management:**
-✅ ConfigMaps for configuration  
-✅ Secrets for sensitive data  
-✅ Environment variables and volume mounts  
-✅ Resource requests and limits  
-✅ QoS classes (BestEffort, Burstable, Guaranteed)  
-✅ Health probes and self-healing  
-
-**Troubleshooting:**
-✅ Debugging CrashLoopBackOff  
-✅ Fixing OOMKilled containers  
-✅ Configuration error resolution  
-✅ Pod scheduling issues  
-✅ Production-grade best practices  
+- **Cluster Management:**
+  - Cluster installation and configuration 
+  - Multi-version upgrades (3 phases)
+  - Node operations and maintenance 
+  - Zero-downtime procedures  
+  - Automated cluster startup (systemd)  
+- **Security & Access Control:**
+  - RBAC security implementation 
+  - Certificate-based authentication 
+  - ServiceAccount permissions 
+  - Secret management 
+  - HTTP basic authentication (htpasswd) 
+- **Application Management:**
+  - ConfigMaps for configuration  
+  - Secrets for sensitive data  
+  - Environment variables and volume mounts  
+  - Resource requests and limits  
+  - QoS classes (BestEffort, Burstable, Guaranteed)  
+  - Health probes and self-healing  
+- **Troubleshooting:**
+  - Debugging CrashLoopBackOff
+  - Fixing OOMKilled containers 
+  - Configuration error resolution  
+  - Pod scheduling issues  
+  - Production-grade best practices 
 
 ### Key Achievements
 
