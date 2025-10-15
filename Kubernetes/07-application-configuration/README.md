@@ -14,12 +14,9 @@ kubectl apply -f example-configmap.yml
 kubectl get configmaps
 kubectl describe configmap player-pro-demo
 ```
-
 **What I learned:**
-
-ConfigMaps can store simple values AND configuration files
-
-Contains 4 keys: player_lives, properties_file_name, base.properties, user-interface.properties
+- ConfigMaps can store simple values AND configuration files
+- Contains 4 keys: player_lives, properties_file_name, base.properties, user-interface.properties
 
 ---
 
@@ -32,10 +29,8 @@ Contains 4 keys: player_lives, properties_file_name, base.properties, user-inter
 kubectl apply -f example-posix-configmap.yml
 kubectl describe configmap player-posix-demo
 ```
-
 **What I learned:**
-
-Uppercase keys are standard for environment variables
+- Uppercase keys are standard for environment variables
 
 ---
 
@@ -51,14 +46,10 @@ kubectl apply -f example-secret.yml
 kubectl get secrets
 kubectl describe secrets example-secret
 ```
-
 **What I learned:**
-
-Secrets store sensitive data
-
-Values are base64 encoded
-
-Not visible in kubectl describe
+- Secrets store sensitive data
+- Values are base64 encoded
+- Not visible in kubectl describe
 
 ---
 
@@ -77,12 +68,9 @@ echo $PROPERTIES_FILE_NAME
 printenv
 exit
 ```
-
 **What I learned:**
-
-ConfigMap keys become environment variables
-
-Secret keys also available as env vars
+- ConfigMap keys become environment variables
+- Secret keys also available as env vars
 
 ---
 
@@ -99,12 +87,9 @@ kubectl exec configmap-posix-demo -it -- /bin/bash
 printenv
 exit
 ```
-
 **What I learned:**
-
-envFrom loads ALL ConfigMap keys automatically
-
-Easier than specifying each key individually
+- envFrom loads ALL ConfigMap keys automatically
+- Easier than specifying each key individually
 
 ---
 
@@ -122,14 +107,10 @@ ls -la /etc/config/configMap
 ls -la /etc/config/secret
 exit
 ```
-
 **What I learned:**
-
-Each ConfigMap key becomes a separate file
-
-Mounted as symlinks (allows dynamic updates)
-
-Secret files automatically decoded
+- Each ConfigMap key becomes a separate file
+- Mounted as symlinks (allows dynamic updates)
+- Secret files automatically decoded
 
 ---
 
@@ -149,72 +130,56 @@ kubectl create secret generic nginx-htpasswd --from-file .htpasswd
 rm -rf .htpasswd
 kubectl describe secrets nginx-htpasswd
 ```
-
 ### Step 2: Created nginx ConfigMap
 ```bash
 kubectl create configmap nginx-config-file --from-file=nginx.conf
 kubectl describe configmap nginx-config-file
 ```
-
 ### Step 3: Deployed nginx (First Failed)
 ```bash
 kubectl apply -f nginx-pod.yml
 kubectl get pods -o wide
-**# STATUS: CrashLoopBackOff**
+# STATUS: CrashLoopBackOff
 
 kubectl logs nginx-pod
-**# Error: directive "user" is not terminated by ";"**
+# Error: directive "user" is not terminated by ";"
 ```
-
 ### Step 4: Fixed and Redeployed
 ```bash
 kubectl delete pod nginx-pod
 vim nginx.conf
-**# Added semicolons to all directives**
+# Added semicolons to all directives
 
 kubectl delete configmap nginx-config-file
 kubectl create configmap nginx-config-file --from-file=nginx.conf
 kubectl apply -f nginx-pod.yml
 kubectl get pods nginx-pod
-**# STATUS: Running ✅**
+# STATUS: Running ✅
 ```
-
 ### Step 5: Tested Authentication
 ```bash
 curl 10.244.0.41
-**# Output: 401 Authorization Required ✅**
+# Output: 401 Authorization Required ✅
 
 curl -u user:0258 10.244.0.41
-**# Output: nginx welcome page ✅**
+# Output: nginx welcome page ✅
 ```
-
 **What I learned:**
-
-htpasswd creates encrypted passwords
-
-nginx.conf needs semicolons on all directives
-
-subPath mounts single file without replacing directory
-
-ConfigMap + Secret work together for secure web server
+- htpasswd creates encrypted passwords
+- nginx.conf needs semicolons on all directives
+- subPath mounts single file without replacing directory
+- ConfigMap + Secret work together for secure web server
 
 ---
-
 
 ## Debugging & Fixes
-
-**Issue:** nginx CrashLoopBackOff
-
-**Cause:** Missing semicolons in nginx.conf
-
-**Fix:** Added semicolons, recreated ConfigMap
-
-**Issue:** Volume mount replacing entire directory
-
-**Fix:** Used subPath to mount only nginx.conf file
+- **Issue:** nginx CrashLoopBackOff
+- **Cause:** Missing semicolons in nginx.conf
+- **Fix:** Added semicolons, recreated ConfigMap
+- **Issue:** Volume mount replacing entire directory
+- **Fix:** Used subPath to mount only nginx.conf file
 
 ---
-
 
 ## Summary
 
@@ -231,7 +196,6 @@ ConfigMap + Secret work together for secure web server
 ✅ Used subPath for precise file mounting
 
 ---
-
 
 ## Nginx with htpasswd Authentication:
 
@@ -250,13 +214,11 @@ cat .htpasswd
 kubectl create secret generic nginx-htpasswd --from-file .htpasswd
 rm -rf .htpasswd
 ```
-
 ### Step 2: Created nginx ConfigMap
 ```bash
 kubectl create configmap nginx-config-file --from-file=nginx.conf
 kubectl describe configmap nginx-config-file
 ```
-
 ### Step 3: First Attempt (Failed)
 ```bash
 kubectl apply -f nginx-pod.yml
@@ -266,7 +228,6 @@ kubectl get pods -o wide
 kubectl logs nginx-pod
 **# Error: directive "user" is not terminated by ";"**
 ```
-
 ### Step 4: Debugged and Fixed
 ```bash
 kubectl delete pod nginx-pod
@@ -279,7 +240,6 @@ kubectl apply -f nginx-pod.yml
 kubectl get pods nginx-pod
 **# STATUS: Running ✅**
 ```
-
 ### Step 5: Tested Authentication
 ```bash
 curl 10.244.0.41
@@ -288,34 +248,20 @@ curl 10.244.0.41
 curl -u user:0258 10.244.0.41
 **# Output: nginx welcome page ✅**
 ```
-
 **What I learned:**
-
-htpasswd creates encrypted passwords ($apr1$ = MD5 hash)
-
-nginx requires semicolons after directives
-
-subPath mounts single file without replacing directory
-
-ConfigMap (config) + Secret (password) = Secure web server
+- htpasswd creates encrypted passwords ($apr1$ = MD5 hash)
+- nginx requires semicolons after directives
+- subPath mounts single file without replacing directory
+- ConfigMap (config) + Secret (password) = Secure web server
 
 ---
 
-
 ### All Files in Project 07
-
-example-configmap.yml
-
-example-posix-configmap.yml
-
-example-secret.yml
-
-configmap-env-demo.yml
-
-configmap-posix-demo.yml
-
-configmap-vol-demo.yml
-
-nginx.conf
-
-nginx-pod.yml
+- example-configmap.yml
+- example-posix-configmap.yml
+- example-secret.yml
+- configmap-env-demo.yml
+- configmap-posix-demo.yml
+- configmap-vol-demo.yml
+- nginx.conf
+- nginx-pod.yml
