@@ -1,6 +1,6 @@
 # Essential kubectl Commands
 
-All kubectl commands used throughout the learning journey.
+***All kubectl commands used throughout the learning journey.***
 
 ---
 
