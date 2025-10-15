@@ -1,80 +1,106 @@
+# Commands Reference - Health Probes
 
-Commands Reference - Health Probes
-Liveness Probe Commands
-bash
-Copy code
-# Apply pod with liveness probe
+## Liveness Probe Commands
+
+#### Apply pod with liveness probe
+```bash
 kubectl apply -f liveness-hc.yml
-
-# Watch for restarts
+```
+#### Watch for restarts
+```bash
 kubectl get pods liveness-probe -w
-
-# Check restart count
+```
+#### Check restart count
+```bash
 kubectl get pods liveness-probe
-
-# View probe configuration
+```
+#### View probe configuration
+```bash
 kubectl describe pod liveness-probe | grep "Liveness:"
-
-# Check events for probe failures
+```
+#### Check events for probe failures
+```bash
 kubectl describe pod liveness-probe | tail -20
-
-# Check exit code and reason
+```
+#### Check exit code and reason
+```bash
 kubectl get pod liveness-probe -o yaml | grep -A 10 lastState
-Startup Probe Commands
-bash
-Copy code
-# Apply pod with startup probe
+```
+
+## Startup Probe Commands
+
+#### Apply pod with startup probe
+```bash
 kubectl apply -f startup-hc.yml
-
-# Check startup configuration
+```
+#### Check startup configuration
+```bash
 kubectl describe pod startup-probe-http | grep "Startup:"
-
-# Monitor pod startup
+```
+#### Monitor pod startup
+```bash
 kubectl get pods startup-probe-http -w
-Readiness Probe Commands
-bash
-Copy code
-# Apply pod with readiness probe
+```
+
+## Readiness Probe Commands
+
+#### Apply pod with readiness probe
+```bash
 kubectl apply -f readiness-demo.yaml
-
-# Check readiness status (READY column)
+```
+#### Check readiness status (READY column)
+```bash
 kubectl get pods readiness-demo
-
-# Check why not ready
+```
+#### Check why not ready
+```bash
 kubectl describe pod readiness-demo | tail -10
-
-# Make pod ready
+```
+#### Make pod ready
+```bash
 kubectl exec readiness-demo -- touch /tmp/ready
-
-# Make pod not ready
+```
+#### Make pod not ready
+```bash
 kubectl exec readiness-demo -- rm /tmp/ready
-
-# Check Service endpoints
+```
+#### Check Service endpoints
+```bash
 kubectl get endpoints readiness-svc
-Testing Probes
-bash
-Copy code
-# Test HTTP endpoint manually
+```
+
+## Testing Probes
+
+#### Test HTTP endpoint manually
+```bash
 POD_IP=$(kubectl get pod <name> -o jsonpath='{.status.podIP}')
 curl $POD_IP
-
-# Check file inside pod (exec probe)
+```
+#### Check file inside pod (exec probe)
+```bash
 kubectl exec <pod> -- cat /tmp/healthcheck
-
-# Watch probe failures in real-time
+```
+#### Watch probe failures in real-time
+```bash
 kubectl get events --watch | grep -i probe
-Debugging Probe Issues
-bash
-Copy code
-# Check probe configuration
+```
+
+## Debugging Probe Issues
+
+#### Check probe configuration
+```bash
 kubectl describe pod <name> | grep -A 3 "Liveness:\|Readiness:\|Startup:"
-
-# View probe failure events
+```
+#### View probe failure events
+```bash
 kubectl describe pod <name> | grep -i unhealthy
-
-# Check container restarts
+```
+#### Check container restarts
+```bash
 kubectl get pods
 # Look at RESTARTS column
-
-# View restart reason
+```
+#### View restart reason
+```bash
 kubectl get pod <name> -o yaml | grep -A 5 lastState
+```
