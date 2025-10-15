@@ -8,35 +8,29 @@
 
 **File:** `request-limit.yml`
 
-### What I did:
+#### What I did:
 
 ```bash
 kubectl apply -f request-limit.yml
 kubectl get pods -o wide
 ```
 
-### What I observed:
+#### What I observed:
+- **frontend-1 (250m):** Running ✅
+- **frontend-2 (250m):** Running ✅
+- **frontend-3 (500m):** Running ✅
+- **frontend-4 (750m):** Pending ❌
 
-**• frontend-1 (250m):** Running ✅
-
-**• frontend-2 (250m):** Running ✅
-
-**• frontend-3 (500m):** Running ✅
-
-**• frontend-4 (750m):** Pending ❌
-
-### What I learned:
-
-• frontend-4 stayed Pending (node doesn't have 750m CPU available)
-
-• Scheduler respects resource requests
+#### What I learned:
+- frontend-4 stayed Pending (node doesn't have 750m CPU available)
+- Scheduler respects resource requests
 
 ---
 
 
 ## Exercise 2: Cannot Update Resources
 
-### What I did:
+#### What I did:
 
 ```bash
 vim request-limit.yml
@@ -47,16 +41,15 @@ kubectl apply -f request-limit.yml
 **Error:**
 `Pod "frontend-3" is invalid: spec: Forbidden`
 
-### Fix:
+#### Fix:
 
 ```bash
 kubectl delete -f request-limit.yml
 kubectl apply -f request-limit.yml
 ```
 
-### What I learned:
-
-• Must delete and recreate to change resources
+#### What I learned:
+- Must delete and recreate to change resources
 
 ---
 
@@ -65,37 +58,32 @@ kubectl apply -f request-limit.yml
 
 **File:** `resource-limit.yml`
 
-### What I did:
+#### What I did:
 
 ```bash
 kubectl apply -f resource-limit.yml
 kubectl describe pod frontend-limit
 ```
 
-### What I observed:
-
-**• Requests:** cpu=250m, memory=64Mi
-
-**• Limits:** cpu=500m, memory=128Mi
-
-**• QoS Class:** Burstable
+#### What I observed:
+- **Requests:** cpu=250m, memory=64Mi
+- **Limits:** cpu=500m, memory=128Mi
+- **QoS Class:** Burstable
 
 ---
 
 
 ## Exercise 4: System Resources
 
-### What I did:
+#### What I did:
 
 ```bash
 top
 ```
 
-### What I observed:
-
-• 2 CPUs available (~2000m)
-
-• 3912 MiB memory
+#### What I observed:
+- 2 CPUs available (~2000m)
+- 3912 MiB memory
 
 ---
 
@@ -104,7 +92,7 @@ top
 
 **File:** `memory-limit-test.yaml`
 
-### What I did:
+#### What I did:
 
 ```bash
 kubectl apply -f memory-limit-test.yaml
@@ -115,24 +103,17 @@ kubectl delete pod memory-demo
 ```
 
 
-### What I observed:
-
-**• STATUS:** CrashLoopBackOff
-
-**• RESTARTS:** 1, 2, 3, 4...
-
-**• exitCode:** 1
-
-**• Reason:** OOMKilled
+#### What I observed:
+- **STATUS:** CrashLoopBackOff
+- **RESTARTS:** 1, 2, 3, 4...
+- **exitCode:** 1
+- **Reason:** OOMKilled
 
 
-### What I learned:
-
-• Container exceeded 100Mi limit
-
-• Kubernetes killed it
-
-• Restarted in infinite loop
+#### What I learned:
+- Container exceeded 100Mi limit
+- Kubernetes killed it
+- Restarted in infinite loop
 
 ---
 
@@ -141,8 +122,7 @@ kubectl delete pod memory-demo
 
 **Files:** `qos-besteffort.yaml, qos-burstable.yaml, qos-guaranteed.yaml`
 
-
-### What I did:
+#### What I did:
 
 ```bash
 kubectl apply -f qos-besteffort.yaml
@@ -156,28 +136,19 @@ kubectl describe pod qos-guaranteed | grep "QoS Class"
 kubectl delete -f qos-*.yaml
 ```
 
-
-### What I observed:
-
-**• BestEffort:** No resources set
-
-**• Burstable:** requests < limits
-
-**• Guaranteed:** requests = limits
+#### What I observed:
+- **BestEffort:** No resources set
+- **Burstable:** requests < limits
+- **Guaranteed:** requests = limits
 
 ---
 
 
 ## Files
 
-**• request-limit.yml**
-
-**• resource-limit.yml**
-
-**• memory-limit-test.yaml**
-
-**• qos-besteffort.yaml**
-
-**• qos-burstable.yaml**
-
-**• qos-guaranteed.yaml**
+- **request-limit.yml**
+- **resource-limit.yml**
+- **memory-limit-test.yaml**
+- **qos-besteffort.yaml**
+- **qos-burstable.yaml**
+- **qos-guaranteed.yaml**
