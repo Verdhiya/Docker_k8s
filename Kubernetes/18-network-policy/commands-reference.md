@@ -66,3 +66,4 @@ spec:
   podSelector: {}
   policyTypes:
   - Ingress
+EOF
