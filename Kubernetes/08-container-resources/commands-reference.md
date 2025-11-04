@@ -1,8 +1,7 @@
+# Commands Reference - Health Probes
 
-Commands Reference - Health Probes
-Liveness Probe Commands
-bash
-Copy code
+### Liveness Probe Commands
+```bash
 # Apply pod with liveness probe
 kubectl apply -f liveness-hc.yml
 
@@ -20,9 +19,10 @@ kubectl describe pod liveness-probe | tail -20
 
 # Check exit code and reason
 kubectl get pod liveness-probe -o yaml | grep -A 10 lastState
-Startup Probe Commands
-bash
-Copy code
+```
+
+### Startup Probe Commands
+```bash
 # Apply pod with startup probe
 kubectl apply -f startup-hc.yml
 
@@ -31,9 +31,10 @@ kubectl describe pod startup-probe-http | grep "Startup:"
 
 # Monitor pod startup
 kubectl get pods startup-probe-http -w
-Readiness Probe Commands
-bash
-Copy code
+```
+
+### Readiness Probe Commands
+```bash
 # Apply pod with readiness probe
 kubectl apply -f readiness-demo.yaml
 
@@ -51,9 +52,10 @@ kubectl exec readiness-demo -- rm /tmp/ready
 
 # Check Service endpoints
 kubectl get endpoints readiness-svc
-Testing Probes
-bash
-Copy code
+```
+
+### Testing Probes
+```bash
 # Test HTTP endpoint manually
 POD_IP=$(kubectl get pod <name> -o jsonpath='{.status.podIP}')
 curl $POD_IP
@@ -63,9 +65,10 @@ kubectl exec <pod> -- cat /tmp/healthcheck
 
 # Watch probe failures in real-time
 kubectl get events --watch | grep -i probe
-Debugging Probe Issues
-bash
-Copy code
+```
+
+### Debugging Probe Issues
+```bash
 # Check probe configuration
 kubectl describe pod <name> | grep -A 3 "Liveness:\|Readiness:\|Startup:"
 
@@ -78,3 +81,4 @@ kubectl get pods
 
 # View restart reason
 kubectl get pod <name> -o yaml | grep -A 5 lastState
+```
