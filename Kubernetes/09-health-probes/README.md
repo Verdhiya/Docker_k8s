@@ -1,26 +1,25 @@
+# Project 09: Health Probes
+***Hands-on practice with Liveness, Readiness, and Startup probes.***
 
-Project 09: Health Probes
-Hands-on practice with Liveness, Readiness, and Startup probes.
+---
 
-Exercise 1: Liveness Probe (Exec and HTTP)
-File: liveness-hc.yml (contains 2 pods: liveness-probe and liveness-probe-http)
+## Exercise 1: Liveness Probe (Exec and HTTP)
 
-What I did:
+**File:** liveness-hc.yml (contains 2 pods: liveness-probe and liveness-probe-http)
 
-bash
-Copy code
+### What I did:
+```bash
 kubectl apply -f liveness-hc.yml
 kubectl get pods -o wide
 kubectl get pods liveness-probe -w
 kubectl describe pods liveness-probe
 kubectl get pod liveness-probe -o yaml | grep -A 10 lastState
 kubectl describe pods liveness-probe-http
-For liveness-probe (exec method):
+```
+### For liveness-probe (exec method):
 
-What I observed:
-
-yaml
-Copy code
+**What I observed:**
+```yaml
 Timeline:
 0-60s: Probe passes ✅ (file exists)
 60s: Container deletes /tmp/healthcheck
@@ -36,60 +35,57 @@ Events:
 Last State:
   Reason: Error
   Exit Code: 137
-For liveness-probe-http:
+```
+### For liveness-probe-http:
 
-What I did:
-
-bash
-Copy code
+### What I did:
+```bash
 curl 10.244.0.63
 # Output: nginx welcome page
-What I observed:
-
-sql
-Copy code
+```
+**What I observed:**
+```sql
 Liveness: http-get http://:80/ delay=3s period=3s
 RESTARTS: 0 (stayed healthy)
 Pod checks HTTP endpoint every 3 seconds
-What I learned:
+```
+**What I learned:**
+- Liveness probe detects frozen containers
+- Exec method: checks if file exists
+- HTTP method: checks endpoint response
+- Failure → Container restarted automatically
+- Exit Code 137 = Killed by Kubernetes
 
-Liveness probe detects frozen containers
-Exec method: checks if file exists
-HTTP method: checks endpoint response
-Failure → Container restarted automatically
-Exit Code 137 = Killed by Kubernetes
-Exercise 2: Startup Probe
-File: startup-hc.yml
+## Exercise 2: Startup Probe
 
-What I did:
+**File:** startup-hc.yml
 
-bash
-Copy code
+### What I did:
+```bash
 kubectl apply -f startup-hc.yml
 kubectl describe pods startup-probe-http
 kubectl get pods -o wide
-What I observed:
-
-vbnet
-Copy code
+```
+**What I observed:**
+```vbnet
 Startup: http-get http://:80/ delay=0s period=10s #failure=30
 
 Calculation: 30 × 10s = 300 seconds (5 minutes allowed)
 
 STATUS: Running
 RESTARTS: 0
-What I learned:
+```
+**What I learned:**
+- Startup probe gives slow apps time to initialize
+- failureThreshold: 30 = 30 checks before giving up
+- nginx started quickly, first check passed
 
-Startup probe gives slow apps time to initialize
-failureThreshold: 30 = 30 checks before giving up
-nginx started quickly, first check passed
-Exercise 3: Readiness Probe
-Files: readiness-demo.yaml, readiness-demo-labeled.yaml, readiness-service.yaml
+## Exercise 3: Readiness Probe
 
-What I did:
+**Files:** readiness-demo.yaml, readiness-demo-labeled.yaml, readiness-service.yaml
 
-bash
-Copy code
+### What I did:
+```bash
 kubectl apply -f readiness-demo.yaml
 kubectl get pods readiness-demo
 kubectl describe pod readiness-demo | tail -10
@@ -99,10 +95,10 @@ kubectl get pods readiness-demo
 kubectl exec readiness-demo -- rm /tmp/ready
 sleep 15
 kubectl get pods readiness-demo
-What I observed:
+```
+**What I observed:**
 
-yaml
-Copy code
+```yaml
 Without /tmp/ready file:
 READY: 0/1 (pod running but NOT ready)
 Warning: Readiness probe failed
@@ -113,43 +109,43 @@ READY: 1/1 (NOW ready!)
 After deleting /tmp/ready:
 READY: 0/1 (not ready again)
 RESTARTS: 0 (never restarted!)
-What I learned:
+```
+**What I learned:**
+- Readiness controls traffic, doesn't restart pod
+- 0/1 = Running but not ready
+- 1/1 = Running and ready for traffic
 
-Readiness controls traffic, doesn't restart pod
-0/1 = Running but not ready
-1/1 = Running and ready for traffic
-Exercise 4: Complete Probes Demo
-File: complete-probes.yaml
+## Exercise 4: Complete Probes Demo
 
-What I did:
+**File:** complete-probes.yaml
 
-bash
-Copy code
+### What I did:
+```bash
 kubectl apply -f complete-probes.yaml
 kubectl describe pod complete-probes-demo | grep -A 2 "Startup:\|Liveness:\|Readiness:"
-What I observed:
+```
+**What I observed:**
+- Pod had all three probe types configured
+- Startup, Liveness, and Readiness all working together
 
-Pod had all three probe types configured
-Startup, Liveness, and Readiness all working together
-Summary
-✅ Liveness probe detects frozen containers → Restarts automatically
+---
 
-✅ Observed RESTARTS counter increasing (1, 2, 3...)
+## Summary
+- ✅ Liveness probe detects frozen containers → Restarts automatically
+- ✅ Observed RESTARTS counter increasing (1, 2, 3...)
+- ✅ Exit Code 137 = Container killed by Kubernetes
+- ✅ Startup probe allows 300 seconds for slow apps
+- ✅ Readiness probe controls traffic (0/1 vs 1/1)
+- ✅ exec and HTTP probe methods tested
 
-✅ Exit Code 137 = Container killed by Kubernetes
+***Key Skill: Self-healing - Kubernetes automatically recovers from failures.***
 
-✅ Startup probe allows 300 seconds for slow apps
+---
 
-✅ Readiness probe controls traffic (0/1 vs 1/1)
-
-✅ exec and HTTP probe methods tested
-
-Key Skill: Self-healing - Kubernetes automatically recovers from failures.
-
-All Files in Project 09
-liveness-hc.yml (exec and HTTP liveness)
-startup-hc.yml (startup probe)
-readiness-demo.yaml (basic readiness)
-readiness-demo-labeled.yaml (with labels)
-readiness-service.yaml (Service for testing)
-complete-probes.yaml (all three probes)
+## All Files in Project 09
+- liveness-hc.yml (exec and HTTP liveness)
+- startup-hc.yml (startup probe)
+- readiness-demo.yaml (basic readiness)
+- readiness-demo-labeled.yaml (with labels)
+- readiness-service.yaml (Service for testing)
+- complete-probes.yaml (all three probes)
