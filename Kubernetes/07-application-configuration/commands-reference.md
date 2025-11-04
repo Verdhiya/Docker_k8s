@@ -1,8 +1,7 @@
+# Commands Reference - Application Configuration
 
-Commands Reference - Application Configuration
-ConfigMap Commands
-bash
-Copy code
+### ConfigMap Commands
+```bash
 # Apply ConfigMap from YAML
 kubectl apply -f example-configmap.yml
 
@@ -20,9 +19,10 @@ kubectl create configmap nginx-config-file --from-file=nginx.conf
 
 # Delete ConfigMap
 kubectl delete configmap player-pro-demo
-Secret Commands
-bash
-Copy code
+```
+
+### Secret Commands
+```bash
 # Encode values to base64
 echo -n 'admin' | base64
 echo -n 'admin321' | base64
@@ -47,9 +47,10 @@ kubectl create secret generic nginx-htpasswd --from-file .htpasswd
 
 # Delete Secret
 kubectl delete secret example-secret
-htpasswd Commands
-bash
-Copy code
+```
+
+### htpasswd Commands
+```bash
 # Install htpasswd
 sudo apt-get update
 apt install apache2-utils
@@ -62,9 +63,10 @@ cat .htpasswd
 
 # Create Secret from htpasswd file
 kubectl create secret generic nginx-htpasswd --from-file .htpasswd
-Pod Environment Variable Commands
-bash
-Copy code
+```
+
+### Pod Environment Variable Commands
+```bash
 # Check environment variables
 kubectl exec configmap-env-demo -- env
 
@@ -77,9 +79,10 @@ kubectl exec configmap-env-demo -- sh -c 'echo $PLAYER_LIVES'
 # Interactive shell
 kubectl exec -it configmap-env-demo -- sh
 # Inside: printenv, echo $VAR_NAME, exit
-Volume Mount Commands
-bash
-Copy code
+```
+
+### Volume Mount Commands
+```bash
 # List mounted files
 kubectl exec configmap-vol-demo -- ls -la /etc/config/configMap
 
@@ -89,9 +92,10 @@ kubectl exec configmap-vol-demo -- cat /etc/config/configMap/player_lives
 # Interactive exploration
 kubectl exec -it configmap-vol-demo -- sh
 # Inside: cd /etc/config, ls -la, cat filename, exit
-nginx Testing Commands
-bash
-Copy code
+```
+
+### nginx Testing Commands
+```bash
 # Get pod IP
 kubectl get pods nginx-pod -o wide
 
@@ -100,3 +104,4 @@ curl <pod-ip>
 
 # Test with credentials
 curl -u user:password <pod-ip>
+```
