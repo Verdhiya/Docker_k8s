@@ -6,8 +6,8 @@
 ```bash
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-v1.32-apt-keyring.gpg
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-v1.32-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes-v1.32.list
-
 ```
+
 ## Upgrade Order
 1. Master node → v1.32.9
 2. Worker-1 → v1.32.9
