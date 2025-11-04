@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: never-restart-fail-pod
+spec:
+  restartPolicy: Never
+  containers:
+    - name: app
+      image: alpine
+      command: ['sh', '-c', 'echo "This will fail"; exit 1']

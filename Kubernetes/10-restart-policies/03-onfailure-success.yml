@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: onfailure-success-pod
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: app
+      image: alpine
+      command: ['sh', '-c', 'echo "Task completed successfully!"; sleep 5; exit 0']

@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secure-sa
+  namespace: sa-demo
+automountServiceAccountToken: false  # Enhanced security - no automatic token mount

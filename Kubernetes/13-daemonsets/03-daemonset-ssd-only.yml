@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ssd-logger
+spec:
+  selector:
+    matchLabels:
+      app: ssd-logger
+  template:
+    metadata:
+      labels:
+        app: ssd-logger
+    spec:
+      nodeSelector:
+        disktype: ssd     # Only on nodes with ssd label
+      containers:
+      - name: logger
+        image: busybox
+        command: ['sh', '-c', 'echo Logging on SSD node && sleep 3600']
