@@ -65,11 +65,124 @@ kubectl rollout undo deployment/<name> --to-revision=<n>
 
 ## Service Operations
 ```bash
+# Basic service commands
 kubectl get services
 kubectl get svc
+kubectl get svc -o wide
 kubectl describe service <name>
 kubectl expose deployment <name> --port=<port> --type=<type>
 kubectl delete service <name>
+
+# Create specific service types
+kubectl expose deployment <name> --port=80 --target-port=80                    # ClusterIP
+kubectl expose deployment <name> --type=NodePort --port=80                      # NodePort
+kubectl expose deployment <name> --type=LoadBalancer --port=80                  # LoadBalancer
+
+# View service endpoints (pod IPs behind service)
+kubectl get endpoints
+kubectl get ep
+kubectl get endpoints <service-name>
+
+# Describe endpoints
+kubectl describe endpoints <service-name>
+
+# Generate service YAML
+kubectl expose deployment <name> --port=80 --dry-run=client -o yaml > service.yml
+```
+
+## Service Discovery & DNS (Module 19)
+```bash
+# Test service from within cluster (same namespace)
+kubectl exec <pod> -- curl http://service-name:port
+
+# Test from different namespace
+kubectl exec -n <namespace> <pod> -- curl http://service-name.target-namespace:port
+
+# Test with full FQDN
+kubectl exec <pod> -- curl http://service-name.namespace.svc.cluster.local:port
+
+# DNS lookup
+kubectl exec <pod> -- nslookup service-name
+kubectl exec <pod> -- nslookup service-name.namespace.svc.cluster.local
+
+# Check DNS config in pod
+kubectl exec <pod> -- cat /etc/resolv.conf
+
+# Port forward for local testing
+kubectl port-forward svc/<service-name> 8080:80
+```
+
+## Ingress Operations (Module 20)
+```bash
+# Install Ingress Controller (Minikube)
+minikube addons enable ingress
+minikube addons disable ingress
+minikube addons list | grep ingress
+
+# Check ingress controller pods
+kubectl get pods -n ingress-nginx
+kubectl get pods -n ingress-nginx -o wide
+
+# Check ingress controller service
+kubectl get svc -n ingress-nginx
+
+# Create and manage ingress
+kubectl apply -f ingress.yml
+kubectl create -f ingress.yml
+kubectl get ingress
+kubectl get ing
+kubectl get ingress -A
+
+# Describe ingress (see rules and backends)
+kubectl describe ingress <ingress-name>
+
+# Edit ingress
+kubectl edit ingress <ingress-name>
+
+# Delete ingress
+kubectl delete ingress <ingress-name>
+
+# View ingress details
+kubectl get ingress <name> -o yaml
+kubectl get ingress <name> -o jsonpath='{.spec.rules[*].host}'
+kubectl get ingress <name> -o jsonpath='{.status.loadBalancer.ingress[*].ip}'
+```
+
+## Test Ingress Routing
+```bash
+# Get ingress IP
+kubectl get ingress <name>
+
+# Test with curl using Host header
+curl http://<INGRESS-IP> -H 'Host: example.com'
+curl -v http://<INGRESS-IP> -H 'Host: example.com'
+
+# Test different hosts
+curl http://<IP> -H 'Host: app1.example.com'
+curl http://<IP> -H 'Host: app2.example.com'
+
+# View ingress controller logs
+kubectl logs -n ingress-nginx <controller-pod-name>
+kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -f
+```
+
+## Node Label Management (Module 20)
+```bash
+# View node labels
+kubectl get nodes --show-labels
+kubectl get node <node-name> --show-labels
+
+# Add label to node
+kubectl label node <node-name> <key>=<value>
+
+# Example: Add minikube primary label (Module 20)
+kubectl label node k8s minikube.k8s.io/primary=true
+
+# Remove label
+kubectl label node <node-name> <key>-
+
+# View specific labels
+kubectl get nodes -L <label-key>
 ```
 
 ## ConfigMap Operations
@@ -124,6 +237,12 @@ kubectl drain <node-name> --ignore-daemonsets
 kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
 kubectl taint nodes <node-name> <key>=<value>:<effect>
 kubectl taint nodes <node-name> <key>-
+
+# Check node taints
+kubectl describe node <node-name> | grep Taint
+
+# View node details
+kubectl describe node <node-name>
 ```
 
 ## Context and Configuration
@@ -143,6 +262,50 @@ kubectl describe <resource> <name>
 kubectl logs <pod-name> --previous
 kubectl top pods
 kubectl top nodes
+
+# Check pod events
+kubectl describe pod <pod-name> | grep -A 10 "Events:"
+
+# Check why pod is pending
+kubectl describe pod <pod-name> | grep -A 5 "Conditions:"
+
+# View all resources in namespace
+kubectl get all -n <namespace>
+```
+
+## DNS and Networking
+```bash
+# Test DNS resolution
+kubectl exec <pod> -- nslookup <service-name>
+kubectl exec <pod> -- nslookup kubernetes.default
+
+# Check DNS config
+kubectl exec <pod> -- cat /etc/resolv.conf
+
+# Check CoreDNS
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns
+
+# Test service connectivity
+kubectl run test --image=curlimages/curl -it --rm -- curl http://service-name
+kubectl run test --image=busybox -it --rm -- wget -qO- http://service-name
+```
+
+## Quick Testing Pods
+```bash
+# Create temporary test pod with curl
+kubectl run test --image=curlimages/curl -it --rm -- sh
+
+# Create temporary test pod with busybox
+kubectl run test --image=busybox -it --rm -- sh
+
+# Test service from temporary pod
+kubectl run test --image=curlimages/curl -it --rm -- curl http://service-name
+
+# Create pod for long-term testing
+kubectl run test-pod --image=curlimages/curl -- sleep 3600
+kubectl exec test-pod -- curl http://service-name
+kubectl delete pod test-pod
 ```
 
 ## Quick Pod Creation
@@ -174,11 +337,75 @@ kubectl create deployment nginx --image=nginx --dry-run=client -o yaml > deploym
 # Service
 kubectl create service clusterip nginx --tcp=80:80 --dry-run=client -o yaml > service.yaml
 
+# Ingress (basic)
+kubectl create ingress my-ingress --rule="example.com/*=my-service:80" --dry-run=client -o yaml > ingress.yaml
+
 # Job
 kubectl create job test --image=busybox --dry-run=client -o yaml > job.yaml
 
 # CronJob
 kubectl create cronjob test --image=busybox --schedule="*/1 * * * *" --dry-run=client -o yaml > cronjob.yaml
+```
+
+## Troubleshooting Service Issues
+```bash
+# Check if service exists
+kubectl get svc <service-name>
+
+# Check service endpoints (should show pod IPs)
+kubectl get endpoints <service-name>
+
+# If no endpoints, check pod labels match service selector
+kubectl get svc <service-name> -o yaml | grep -A 3 selector
+kubectl get pods --show-labels
+
+# Check pods are running
+kubectl get pods -l <service-selector>
+
+# Test direct to pod (bypass service)
+kubectl get pods -o wide
+kubectl exec test-pod -- curl http://<pod-ip>:80
+```
+
+## Troubleshooting Ingress Issues
+```bash
+# Check ingress exists
+kubectl get ingress
+
+# Check ingress has address
+kubectl get ingress <name>
+
+# Check ingress controller is running
+kubectl get pods -n ingress-nginx
+
+# View ingress controller logs
+kubectl logs -n ingress-nginx <controller-pod>
+
+# Check backend services exist
+kubectl get svc
+
+# Check service endpoints
+kubectl get endpoints <service-name>
+
+# Test service directly (bypass ingress)
+kubectl run test --image=curlimages/curl -it --rm -- curl http://service-name
+```
+
+## Minikube Commands (Module 20)
+```bash
+# Get minikube IP
+minikube ip
+
+# Get service URL
+minikube service <service-name> --url
+
+# Enable/disable addons
+minikube addons enable ingress
+minikube addons disable ingress
+minikube addons list
+
+# Check minikube status
+minikube status
 ```
 
 ## Resource Shortnames
@@ -194,6 +421,8 @@ persistentvolumeclaims = pvc
 configmaps = cm
 serviceaccounts = sa
 daemonsets = ds
+ingress = ing
+endpoints = ep
 ```
 
 ## Useful Aliases
@@ -202,10 +431,50 @@ alias k='kubectl'
 alias kgp='kubectl get pods'
 alias kgs='kubectl get svc'
 alias kgd='kubectl get deployments'
+alias kgi='kubectl get ingress'
 alias kd='kubectl describe'
 alias kdp='kubectl describe pod'
 alias kl='kubectl logs'
 alias kex='kubectl exec -it'
 alias kaf='kubectl apply -f'
 alias kdf='kubectl delete -f'
+alias kge='kubectl get endpoints'
+```
+
+## DNS Naming Patterns (Module 19)
+```bash
+# Same namespace
+service-name
+service-name:port
+
+# Different namespace
+service-name.namespace
+service-name.namespace:port
+
+# Full FQDN (works from anywhere)
+service-name.namespace.svc.cluster.local
+service-name.namespace.svc.cluster.local:port
+
+# Examples
+curl http://nginx-service                                    # Same namespace
+curl http://nginx-service.default                            # Different namespace
+curl http://nginx-service.default.svc.cluster.local          # Full FQDN
+```
+
+## Common Command Patterns from Modules 19-20
+```bash
+# Module 19: Test ClusterIP service
+kubectl exec pod-svc-test -- curl nginx-service:8080
+
+# Module 19: Test cross-namespace DNS
+kubectl exec -n service-namespace svc-test-dns -- curl nginx-service.default:8080
+
+# Module 20: Test ingress routing
+curl http://172.31.19.217 -H 'Host: nginx-official.example.com'
+
+# Module 20: Fix ingress controller (add node label)
+kubectl label node k8s minikube.k8s.io/primary=true
+
+# Module 20: View ingress logs
+kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -f
 ```
