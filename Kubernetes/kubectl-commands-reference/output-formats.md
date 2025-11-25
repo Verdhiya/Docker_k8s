@@ -226,3 +226,155 @@ kubectl get pods -n production -l app=web -o custom-columns=NAME:.metadata.name,
 - Wildcards use `*`: `.items[*]`
 - String literals in JSONPath need quotes: `{"\n"}`
 - Field selectors are limited compared to label selectors
+
+---
+
+## Practical Examples from Modules 19-20
+
+### Module 19: Services and Endpoints
+
+```bash
+# Get service ClusterIP
+kubectl get svc nginx-service -o jsonpath='{.spec.clusterIP}'
+# Output: 10.97.214.191
+
+# Get service selector
+kubectl get svc nginx-service -o jsonpath='{.spec.selector}'
+# Output: {"app":"frontend"}
+
+# Get service port mapping
+kubectl get svc nginx-service -o jsonpath='{.spec.ports[0].port}'
+kubectl get svc nginx-service -o jsonpath='{.spec.ports[0].targetPort}'
+
+# Get all service names and their ClusterIPs
+kubectl get svc -o custom-columns=NAME:.metadata.name,CLUSTER-IP:.spec.clusterIP,TYPE:.spec.type
+
+# Get service endpoints (pod IPs)
+kubectl get endpoints nginx-service -o jsonpath='{.subsets[*].addresses[*].ip}'
+
+# Compare service endpoints with pod IPs
+kubectl get pods -l app=frontend -o custom-columns=NAME:.metadata.name,IP:.status.podIP
+kubectl get endpoints nginx-service
+
+# Get services with their ports
+kubectl get svc -o custom-columns=NAME:.metadata.name,PORT:.spec.ports[*].port,TARGET:.spec.ports[*].targetPort,NODEPORT:.spec.ports[*].nodePort
+```
+
+### Module 20: Ingress
+
+```bash
+# Get ingress hosts
+kubectl get ingress nginx-rules -o jsonpath='{.spec.rules[*].host}'
+# Output: nginx-official.example.com magical-nginx.example.com
+
+# Get ingress address
+kubectl get ingress nginx-rules -o jsonpath='{.status.loadBalancer.ingress[*].ip}'
+# Output: 172.31.19.217
+
+# Get backend service names from ingress
+kubectl get ingress nginx-rules -o jsonpath='{.spec.rules[*].http.paths[*].backend.service.name}'
+
+# Get all ingress with hosts and addresses
+kubectl get ingress -o custom-columns=NAME:.metadata.name,HOSTS:.spec.rules[*].host,ADDRESS:.status.loadBalancer.ingress[*].ip
+
+# Check ingress controller pods status
+kubectl get pods -n ingress-nginx -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+
+# Get node labels (used to fix ingress controller)
+kubectl get nodes -o custom-columns=NAME:.metadata.name,LABELS:.metadata.labels
+```
+
+### Cross-Namespace DNS Testing (Module 19)
+
+```bash
+# List pods in different namespace
+kubectl get pods -n service-namespace -o custom-columns=NAME:.metadata.name,IP:.status.podIP,NAMESPACE:.metadata.namespace
+
+# Get all services across namespaces
+kubectl get svc -A -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,TYPE:.spec.type,CLUSTER-IP:.spec.clusterIP
+
+# Check DNS server (CoreDNS)
+kubectl get pods -n kube-system -l k8s-app=kube-dns -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,IP:.status.podIP
+```
+
+### Troubleshooting Ingress Controller (Module 20)
+
+```bash
+# Check why pod is pending - node affinity issue
+kubectl get pod ingress-nginx-controller-xxx -n ingress-nginx -o jsonpath='{.spec.nodeSelector}'
+# Output: {"kubernetes.io/os":"linux","minikube.k8s.io/primary":"true"}
+
+# Get node labels to compare
+kubectl get node k8s -o jsonpath='{.metadata.labels}' | jq '.'
+
+# Get pod events showing scheduling failure
+kubectl get pod ingress-nginx-controller-xxx -n ingress-nginx -o jsonpath='{.status.conditions[?(@.type=="PodScheduled")].message}'
+
+# Check all pods pending in namespace
+kubectl get pods -n ingress-nginx --field-selector status.phase=Pending -o custom-columns=NAME:.metadata.name,REASON:.status.conditions[*].reason
+```
+
+### Service Discovery Verification
+
+```bash
+# Get full service DNS information
+kubectl get svc nginx-service -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,CLUSTER-IP:.spec.clusterIP
+
+# List all endpoints with their IPs
+kubectl get endpoints -o custom-columns=NAME:.metadata.name,ENDPOINTS:.subsets[*].addresses[*].ip
+
+# Get pods and their corresponding service
+kubectl get pods -o custom-columns=NAME:.metadata.name,LABELS:.metadata.labels,IP:.status.podIP
+```
+
+### Quick Status Checks
+
+```bash
+# One-liner: Check if all ingress backends are healthy
+kubectl get ingress nginx-rules -o jsonpath='{range .spec.rules[*].http.paths[*]}{.backend.service.name}{"\n"}{end}' | while read svc; do echo -n "$svc: "; kubectl get endpoints $svc -o jsonpath='{.subsets[*].addresses[*].ip}' && echo; done
+
+# One-liner: Get all services and their endpoint count
+kubectl get svc -o json | jq -r '.items[] | "\(.metadata.name): \(.spec.clusterIP) - Endpoints: \(if .spec.selector then "dynamic" else "manual" end)"'
+
+# Check all namespaces for services
+kubectl get svc -A -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,TYPE:.spec.type,PORTS:.spec.ports[*].port --sort-by=.metadata.namespace
+```
+
+---
+
+## Real Output Examples from Practice
+
+### Service Description Output
+```bash
+$ kubectl get svc nginx-service -o wide
+NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+nginx-service   ClusterIP   10.97.214.191   <none>        8080/TCP   4d
+
+$ kubectl get endpoints nginx-service
+NAME            ENDPOINTS
+nginx-service   10.244.0.212:80,10.244.0.211:80,10.244.0.213:80
+```
+
+### Ingress Output
+```bash
+$ kubectl get ingress nginx-rules
+NAME          CLASS    HOSTS                                                  ADDRESS         PORTS   AGE
+nginx-rules   <none>   nginx-official.example.com,magical-nginx.example.com   172.31.19.217   80      24m
+
+$ kubectl describe ingress nginx-rules
+Name:             nginx-rules
+Namespace:        default
+Address:          172.31.19.217
+Rules:
+  Host                        Path  Backends
+  ----                        ----  --------
+  nginx-official.example.com  /     nginx-official-service:80 (10.244.0.235:80)
+  magical-nginx.example.com   /     magical-nginx:80 (10.244.0.236:80)
+```
+
+### Node Labels Output
+```bash
+$ kubectl get node k8s --show-labels
+NAME   STATUS   ROLES           AGE   VERSION   LABELS
+k8s    Ready    control-plane   48d   v1.34.0   beta.kubernetes.io/arch=amd64,kubernetes.io/os=linux,minikube.k8s.io/primary=true,...
+```
