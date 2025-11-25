@@ -25,6 +25,8 @@
 **16:** Deployments (Scaling, Rolling updates, Rollback)  
 **17:** Kubernetes Networking (Pod DNS, Communication)  
 **18:** Network Policies (Pod-level firewall rules)  
+**19:** Kubernetes Services (ClusterIP, NodePort, DNS, Cross-namespace)  
+**20:** Kubernetes Ingress (HTTP routing, Host-based routing, Ingress Controller)  
 
 ### Technologies Used
 
@@ -32,6 +34,7 @@
 - **Tools:** kubeadm, kubectl, Minikube v1.37.0
 - **Container Runtime:** containerd
 - **CNI Plugin:** Calico v3.28.0
+- **Ingress Controller:** Nginx Ingress Controller v1.13.2
 - **Platform:** AWS EC2 (t2.medium), Minikube (t2.medium)
 - **OS:** Ubuntu 24.04
 
@@ -82,22 +85,35 @@
 ✅ Pause/Resume (batched updates)  
 ✅ Manual and declarative scaling  
 
-**Networking:**
+**Networking & Services:**
 ✅ Pod-to-pod communication  
 ✅ Services (ClusterIP, NodePort, LoadBalancer)  
 ✅ DNS resolution (CoreDNS)  
-✅ Pod DNS format  
+✅ Service discovery and endpoints  
+✅ Cross-namespace communication  
+✅ Port mapping (port, targetPort, nodePort)  
 ✅ Network Policies (ingress/egress)  
 ✅ CNI plugins (Calico)  
+
+**Ingress & HTTP Routing:**
+✅ Nginx Ingress Controller installation  
+✅ Host-based routing (multiple domains)  
+✅ Ingress resource configuration  
+✅ Single entry point for multiple services  
+✅ HTTP request routing with Host headers  
+✅ Local hosts file configuration  
+✅ Node label troubleshooting  
 
 **Troubleshooting:**
 ✅ Debugging CrashLoopBackOff  
 ✅ Fixing OOMKilled containers  
 ✅ Configuration error resolution  
 ✅ Pod scheduling issues  
+✅ Node affinity problems  
 ✅ Force deleting stuck pods  
 ✅ Network policy testing  
 ✅ Disk space management  
+✅ Ingress controller pod scheduling  
 
 ### Key Achievements
 
@@ -141,11 +157,29 @@
 - Scaled applications from 3 to 10 replicas and back
 - Managed multiple ReplicaSets per Deployment
 
+**Networking & Service Discovery:**
+- Created ClusterIP services for internal communication
+- Exposed applications externally with NodePort
+- Tested cross-namespace DNS resolution
+- Understood service endpoints and label selectors
+- Debugged service connectivity issues
+- Mastered DNS naming (short, namespace-qualified, FQDN)
+
+**Ingress & HTTP Routing:**
+- Installed Nginx Ingress Controller
+- Fixed ingress controller pods stuck in Pending (node label issue)
+- Routed two applications through single IP address
+- Implemented host-based routing with domain names
+- Tested with curl using Host headers
+- Configured browser access via local hosts file
+- Achieved professional URLs without port numbers
+
 **Debugging & Problem Solving:**
 - Fixed nginx CrashLoopBackOff (missing semicolons)
 - Debugged OOMKilled containers (memory limit exceeded)
 - Resolved volume mounting issues (subPath technique)
 - Fixed pod Pending issues (resource constraints)
+- Solved ingress controller node affinity mismatch
 - Understood Exit Codes (0, 1, 127, 137, 143)
 - Tested Network Policy enforcement
 - Cleaned disk from 98% to 57% usage
@@ -153,23 +187,38 @@
 
 ### Repository Contents
 
-- **92 files** across 20 directories
-- **31 YAML configuration files** from hands-on practice
-- **18 README documentation files** explaining each project
-- **18 command reference files** for quick lookup
+- **120 files** across 22 directories
+- **41 YAML configuration files** from hands-on practice
+- **20 README documentation files** explaining each project
+- **20 command reference files** for quick lookup
 - **6 shell scripts** for automation
-- **3 markdown guides** for procedures
+- **4 markdown guides** for procedures
 
 ---
 
 ## Project Details
 
-**Projects 1-4:** Infrastructure & Operations (Cluster setup and management)  
-**Projects 5-6:** Security & Access Control (RBAC and authentication)  
-**Projects 7-9:** Configuration & Health (ConfigMaps, Resources, Probes)  
-**Projects 10-12:** Policies & Scheduling (Restart policies, Scheduling rules)  
-**Projects 13-15:** Advanced Placement (DaemonSets, Static pods, Affinity)  
-**Projects 16-18:** Scaling & Networking (Deployments, Networking, Policies)  
+### Infrastructure & Operations (1-4)
+**Projects 1-4:** Cluster setup, maintenance, and upgrades
+
+### Security & Access Control (5-6)
+**Projects 5-6:** RBAC, authentication, and permissions
+
+### Configuration & Health (7-9)
+**Projects 7-9:** ConfigMaps, Resources, and Health Probes
+
+### Policies & Scheduling (10-12)
+**Projects 10-12:** Restart policies and pod placement
+
+### Advanced Placement (13-15)
+**Projects 13-15:** DaemonSets, Static pods, and Affinity
+
+### Scaling & Networking (16-18)
+**Projects 16-18:** Deployments, Networking basics, and Policies
+
+### Services & Ingress (19-20) 🆕
+**Project 19:** Kubernetes Services - Service types, DNS, endpoints  
+**Project 20:** Kubernetes Ingress - HTTP routing, ingress controller
 
 Each project includes:
 - Numbered YAML/script files (practice order)
@@ -178,21 +227,192 @@ Each project includes:
 
 ---
 
+## 19. Kubernetes Services 🌐
+
+**Focus:** Service types, DNS resolution, and cross-namespace communication
+
+Master Kubernetes networking fundamentals with services.
+
+**What's Covered:**
+- ClusterIP services for internal communication
+- NodePort services for external access
+- Service discovery using DNS
+- Cross-namespace service access
+- Port mapping (port, targetPort, nodePort)
+- Label selectors and endpoints
+
+**Files:**
+```
+19-k8s_services/
+├── 01-nginx-deployment.yml              # Nginx with 3 replicas
+├── 02-clusterip-service.yml             # Internal service
+├── 03-test-pod.yml                      # Pod with curl for testing
+├── 04-nodeport-service.yml              # External service
+├── 05-cross-namespace-test-pod.yml      # Cross-namespace testing
+├── README.md                            # What I learned
+└── commands-reference.md                # Commands used
+```
+
+**Key Learnings:**
+- Services provide stable IPs and DNS names for ephemeral pods
+- ClusterIP is internal only, NodePort exposes externally
+- DNS short names work only in same namespace
+- Cross-namespace requires: `service-name.namespace` or full FQDN
+- Endpoints show actual pod IPs service routes to
+
+**Practical Skills:**
+- Created ClusterIP service and tested from pod
+- Created NodePort service and accessed externally
+- Tested cross-namespace DNS resolution
+- Understood service selector and label matching
+- Debugged service connectivity issues
+
+**Challenge:** Learned that short DNS names don't work across namespaces - need namespace-qualified names!
+
+---
+
+## 20. Kubernetes Ingress 🚪
+
+**Focus:** HTTP routing with Ingress Controller and host-based routing
+
+Route multiple applications through single entry point with domain names.
+
+**What's Covered:**
+- Installing Nginx Ingress Controller
+- Creating Ingress resources with routing rules
+- Host-based routing (different domains)
+- Troubleshooting node affinity issues
+- Testing with curl and browser
+- Configuring local hosts file
+
+**Files:**
+```
+20-ingress/
+├── 01-nginx-deployment.yml              # Nginx official (app 1)
+├── 02-nginx-deployment-service.yml      # Service for app 1
+├── 03-magical-nginx-deployment.yml      # Magical nginx (app 2)
+├── 04-magical-nginx-deployment-service.yml  # Service for app 2
+├── 05-ingress-rules.yml                 # Host-based routing rules
+├── README.md                            # Step-by-step guide
+└── commands-reference.md                # Commands that worked
+```
+
+**Key Learnings:**
+- Ingress Controller = Software (Nginx pod) that implements routing
+- Ingress Resource = YAML rules that define routing
+- Host header determines which service gets traffic
+- One IP can serve multiple apps with different domains
+- Node labels sometimes required for pod scheduling
+
+**Practical Skills:**
+- Installed Nginx Ingress Controller via minikube addon
+- Fixed pods stuck in Pending by adding node label
+- Created ingress with host-based routing rules
+- Tested routing with curl using Host header
+- Configured local hosts file for browser access
+- Successfully accessed two apps via domain names
+
+**Challenge Solved:** Ingress controller pods stuck in Pending due to missing node label `minikube.k8s.io/primary=true`. Added label and pods started immediately!
+
+**Real Achievement:**
+- **Before:** Two apps on different ports (31303, 31304)
+- **After:** Two apps on standard port 80 with professional domain names
+- **Result:** Single entry point routing to multiple services! 🎯
+
+---
+
 ## Hands-On Statistics
 
-- **Projects Completed:** 18
-- **YAML Files Created:** 92
+- **Projects Completed:** 20
+- **YAML Files Created:** 120
 - **Clusters Deployed:** 2 (1 single-node Minikube + 1 three-node AWS)
 - **Cluster Uptime:** 15+ days with multiple restarts
 - **Upgrade Phases:** 3 (across 3 major K8s versions)
 - **Deployment Revisions:** 7 (with rollbacks tested)
-- **Debugging Sessions:** Multiple (CrashLoopBackOff, OOMKilled, Pending, Network policies)
-- **Working Demos:** nginx auth, resource limits, rolling updates, Network Policies
+- **Services Created:** 6 (ClusterIP, NodePort)
+- **Ingress Rules Configured:** 2 host-based routes
+- **Debugging Sessions:** Multiple (CrashLoopBackOff, OOMKilled, Pending, Node affinity, Network policies)
+- **Working Demos:** nginx auth, resource limits, rolling updates, Network Policies, Services, Ingress routing
+
+---
+
+## 📊 Repository Statistics
+
+**Total Modules:** 20  
+**Total Directories:** 22  
+**Total Files:** 120  
+
+**Coverage:**
+- ✅ Cluster Setup (Minikube + Multi-node)
+- ✅ Cluster Operations (Drain, Upgrade, Maintenance)
+- ✅ Security & RBAC (Users, Service Accounts)
+- ✅ Application Management (Config, Resources, Health)
+- ✅ Scheduling (Selectors, Affinity, DaemonSets, Static Pods)
+- ✅ Workload Controllers (Deployments, ReplicaSets)
+- ✅ Networking (DNS, Services, Network Policies, Ingress)
+
+**Skill Level:** Beginner → Advanced Kubernetes Administration
+
+---
+
+## 🎓 Learning Path
+
+```
+Start: Minikube local environment
+  ↓
+Production: 3-node cluster setup
+  ↓
+Basics: RBAC, ConfigMaps, Resources
+  ↓
+Advanced: Scheduling, Health Checks, Multi-container
+  ↓
+Networking: Services, DNS, Network Policies
+  ↓
+Routing: Ingress Controller, HTTP routing
+  ↓
+Result: Complete K8s administration skills! ✅
+```
+
+---
+
+## 🚀 What Makes This Repository Unique
+
+1. **Practical Focus** - Every file has been tested and works
+2. **Real Troubleshooting** - Includes actual problems solved
+3. **Progressive Learning** - From basics to advanced
+4. **Complete Documentation** - READMEs explain what and why
+5. **Commands Reference** - Actual commands used, not just theory
+6. **Production Ready** - Patterns suitable for real environments
+
+---
+
+## 💡 Skills Demonstrated
+
+**Cluster Management:**
+- Installation, configuration, upgrades, maintenance
+
+**Security:**
+- RBAC, service accounts, network policies
+
+**Application Lifecycle:**
+- Deployments, scaling, health checks, restarts
+
+**Networking:**
+- Services (ClusterIP, NodePort)
+- DNS and service discovery
+- Ingress and HTTP routing
+- Network isolation
+
+**Troubleshooting:**
+- Node affinity issues
+- DNS resolution problems
+- Service connectivity
+- Pod scheduling failures
 
 ---
 
 *All configurations tested and verified working.*  
 *Demonstrates production-ready Kubernetes skills*
 
-**Last Updated:** November 4, 2025  
-**Total Learning Duration:** 21+ days of hands-on practice
+**Last Updated:** November 25, 2024  
+**Total Learning Duration:** 25+ days of hands-on practice
