@@ -166,6 +166,67 @@ kubectl logs -n ingress-nginx <controller-pod-name>
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -f
 ```
 
+## Storage Operations (Module 21)
+```bash
+# View PersistentVolumes
+kubectl get pv
+kubectl get persistentvolumes
+kubectl get pv -o wide
+kubectl describe pv <pv-name>
+
+# View PersistentVolumeClaims
+kubectl get pvc
+kubectl get persistentvolumeclaims
+kubectl get pvc -o wide
+kubectl describe pvc <pvc-name>
+
+# View StorageClass
+kubectl get storageclass
+kubectl get sc
+kubectl describe storageclass <name>
+
+# Create storage resources
+kubectl apply -f storageclass.yml
+kubectl apply -f pv.yml
+kubectl apply -f pvc.yml
+
+# Delete storage resources
+kubectl delete pvc <pvc-name>
+kubectl delete pv <pv-name>
+kubectl delete storageclass <name>
+
+# Edit PVC (expand storage if allowed)
+kubectl edit pvc <pvc-name>
+
+# Check which pod is using PVC
+kubectl describe pvc <pvc-name> | grep "Used By:"
+
+# Check volume mounts in pod
+kubectl describe pod <pod-name> | grep -A 5 "Volumes:"
+kubectl describe pod <pod-name> | grep -A 3 "Mounts:"
+```
+
+## Test Volume Persistence
+```bash
+# For hostPath volumes - check on node
+ls -la /var/tmp/
+cat /var/tmp/<filename>
+
+# Exec into pod to check volume
+kubectl exec -it <pod-name> -- /bin/bash
+cd /data
+ls -la
+cat <file>
+
+# Exec into specific container (multi-container pod)
+kubectl exec -it <pod-name> -c <container-name> -- /bin/bash
+
+# Kill container to test emptyDir persistence
+kubectl exec -it <pod-name> -- kill 1
+# Check if data survives (watch RESTARTS count increase)
+kubectl get pods -w
+```
+
 ## Node Label Management (Module 20)
 ```bash
 # View node labels
@@ -391,7 +452,34 @@ kubectl get endpoints <service-name>
 kubectl run test --image=curlimages/curl -it --rm -- curl http://service-name
 ```
 
-## Minikube Commands (Module 20)
+## Troubleshooting Storage Issues
+```bash
+# Check PVC status
+kubectl get pvc
+kubectl describe pvc <pvc-name>
+
+# If PVC stuck in Pending:
+# 1. Check if matching PV exists
+kubectl get pv
+
+# 2. Check volumeBindingMode (might be WaitForFirstConsumer)
+kubectl describe storageclass <name> | grep VolumeBindingMode
+
+# 3. Create pod using PVC (triggers binding)
+
+# Check PV status
+kubectl get pv
+kubectl describe pv <pv-name>
+
+# Check whats using PVC
+kubectl describe pvc <pvc-name> | grep "Used By:"
+
+# Check pod volume mounts
+kubectl describe pod <pod-name> | grep -A 10 "Volumes:"
+kubectl describe pod <pod-name> | grep -A 5 "Mounts:"
+```
+
+## Minikube Commands
 ```bash
 # Get minikube IP
 minikube ip
@@ -423,6 +511,7 @@ serviceaccounts = sa
 daemonsets = ds
 ingress = ing
 endpoints = ep
+storageclasses = sc
 ```
 
 ## Useful Aliases
@@ -432,6 +521,8 @@ alias kgp='kubectl get pods'
 alias kgs='kubectl get svc'
 alias kgd='kubectl get deployments'
 alias kgi='kubectl get ingress'
+alias kgpv='kubectl get pv'
+alias kgpvc='kubectl get pvc'
 alias kd='kubectl describe'
 alias kdp='kubectl describe pod'
 alias kl='kubectl logs'
@@ -461,7 +552,7 @@ curl http://nginx-service.default                            # Different namespa
 curl http://nginx-service.default.svc.cluster.local          # Full FQDN
 ```
 
-## Common Command Patterns from Modules 19-20
+## Common Command Patterns from Modules 19-21
 ```bash
 # Module 19: Test ClusterIP service
 kubectl exec pod-svc-test -- curl nginx-service:8080
@@ -477,4 +568,41 @@ kubectl label node k8s minikube.k8s.io/primary=true
 
 # Module 20: View ingress logs
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -f
+
+# Module 21: Check hostPath data on node
+cat /var/tmp/output.txt
+cat /var/tmp/success.txt
+
+# Module 21: Test emptyDir persistence
+kubectl exec -it redis-emptydir -- kill 1    # Kill container
+kubectl get pods -w                          # Watch restart
+kubectl exec -it redis-emptydir -- ls /data/redis/  # Data still there!
+
+# Module 21: Test multi-container sharing
+kubectl exec -it shared-multi-container -c nginx-container -- cat /usr/share/nginx/html/index.html
+kubectl exec -it shared-multi-container -c debian-container -- cat /html/index.html
+# Both see same data!
+
+# Module 21: Watch PVC binding
+kubectl get pvc -w  # Status: Pending → Bound (when pod created)
+```
+
+## Storage Lifecycle Commands
+```bash
+# Create storage resources in order
+kubectl apply -f storageclass.yml      # 1. StorageClass
+kubectl apply -f pv.yml                # 2. PersistentVolume
+kubectl apply -f pvc.yml               # 3. PersistentVolumeClaim
+kubectl apply -f pod-using-pvc.yml     # 4. Pod using PVC
+
+# Check binding status
+kubectl get pv                          # Check PV status
+kubectl get pvc                         # Check PVC status
+
+# Delete in reverse order
+kubectl delete -f pod-using-pvc.yml    # 1. Delete pod first
+kubectl delete -f pvc.yml              # 2. Delete PVC (triggers reclaim policy)
+kubectl get pv                         # 3. Check PV status (depends on reclaim policy)
+kubectl delete -f pv.yml               # 4. Delete PV
+kubectl delete -f storageclass.yml     # 5. Delete StorageClass
 ```
