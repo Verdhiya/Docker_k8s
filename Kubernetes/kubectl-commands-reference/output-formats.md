@@ -8,6 +8,8 @@ Shows additional columns with more information
 kubectl get pods -o wide
 kubectl get nodes -o wide
 kubectl get services -o wide
+kubectl get pv -o wide
+kubectl get pvc -o wide
 ```
 
 ### YAML Format
@@ -15,6 +17,8 @@ Full resource definition in YAML
 ```bash
 kubectl get pod <pod-name> -o yaml
 kubectl get deployment <name> -o yaml
+kubectl get pv <pv-name> -o yaml
+kubectl get pvc <pvc-name> -o yaml
 kubectl get all -o yaml
 ```
 
@@ -23,12 +27,15 @@ Full resource definition in JSON
 ```bash
 kubectl get pod <pod-name> -o json
 kubectl get nodes -o json
+kubectl get pv -o json
 ```
 
 ### Name Only
 Only resource names
 ```bash
 kubectl get pods -o name
+kubectl get pv -o name
+kubectl get pvc -o name
 kubectl get all -o name
 ```
 
@@ -38,6 +45,8 @@ Define custom output columns
 kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase
 kubectl get pods -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,IP:.status.podIP
 kubectl get nodes -o custom-columns=NAME:.metadata.name,CPU:.status.capacity.cpu,MEMORY:.status.capacity.memory
+kubectl get pv -o custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage,STATUS:.status.phase
+kubectl get pvc -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,VOLUME:.spec.volumeName,CAPACITY:.status.capacity.storage
 ```
 
 ## JSONPath Queries
@@ -52,6 +61,12 @@ kubectl get pods -o jsonpath='{.items[*].status.podIP}'
 
 # Get node names
 kubectl get nodes -o jsonpath='{.items[*].metadata.name}'
+
+# Get PV names
+kubectl get pv -o jsonpath='{.items[*].metadata.name}'
+
+# Get PVC status
+kubectl get pvc -o jsonpath='{.items[*].status.phase}'
 ```
 
 ### Formatted JSONPath
@@ -64,6 +79,9 @@ kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.po
 
 # With headers
 kubectl get pods -o jsonpath='{range .items[*]}{"Pod: "}{.metadata.name}{" IP: "}{.status.podIP}{"\n"}{end}'
+
+# PV capacity and status
+kubectl get pv -o jsonpath='{range .items[*]}{"PV: "}{.metadata.name}{" Capacity: "}{.spec.capacity.storage}{" Status: "}{.status.phase}{"\n"}{end}'
 ```
 
 ### Complex JSONPath Examples
@@ -82,6 +100,9 @@ kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.capaci
 
 # Get service endpoints
 kubectl get svc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.clusterIP}{"\t"}{.spec.ports[*].port}{"\n"}{end}'
+
+# Get PVC and their bound PV
+kubectl get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.volumeName}{"\t"}{.status.phase}{"\n"}{end}'
 ```
 
 ## Filtering and Sorting
@@ -91,6 +112,8 @@ kubectl get svc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.clust
 kubectl get pods --field-selector status.phase=Running
 kubectl get pods --field-selector status.phase!=Running
 kubectl get pods --field-selector metadata.namespace=default
+kubectl get pv --field-selector status.phase=Available
+kubectl get pvc --field-selector status.phase=Bound
 ```
 
 ### Label Selector
@@ -107,6 +130,7 @@ kubectl get pods --sort-by=.metadata.name
 kubectl get pods --sort-by=.metadata.creationTimestamp
 kubectl get nodes --sort-by=.status.capacity.cpu
 kubectl get pv --sort-by=.spec.capacity.storage
+kubectl get pvc --sort-by=.status.capacity.storage
 ```
 
 ## Practical Examples
@@ -160,12 +184,15 @@ kubectl get pod <pod-name> -o yaml | kubectl neat > pod-backup.yaml
 kubectl get pods --watch
 kubectl get pods -w
 kubectl get pods --watch-only
+kubectl get pvc -w
+kubectl get pv -w
 ```
 
 ### Watch with Output Format
 ```bash
 kubectl get pods -o wide --watch
 kubectl get events --watch
+kubectl get pvc -o wide --watch
 ```
 
 ## Combining Commands
@@ -186,6 +213,8 @@ kubectl get pods -o custom-columns=NAME:.metadata.name,CPU_REQ:.spec.containers[
 ```bash
 kubectl get pods --no-headers | wc -l
 kubectl get nodes --no-headers | wc -l
+kubectl get pv --no-headers | wc -l
+kubectl get pvc --no-headers | wc -l
 ```
 
 ### Filter and Format
@@ -195,6 +224,9 @@ kubectl get pods --field-selector status.phase=Running -o custom-columns=NAME:.m
 
 # Pods in specific namespace with labels
 kubectl get pods -n production -l app=web -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,STATUS:.status.phase
+
+# Available PVs only
+kubectl get pv --field-selector status.phase=Available -o custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage
 ```
 
 ## Output Comparison
@@ -226,10 +258,11 @@ kubectl get pods -n production -l app=web -o custom-columns=NAME:.metadata.name,
 - Wildcards use `*`: `.items[*]`
 - String literals in JSONPath need quotes: `{"\n"}`
 - Field selectors are limited compared to label selectors
+- Storage units are case-sensitive: `100Mi` not `100mi`
 
 ---
 
-## Practical Examples from Modules 19-20
+## Practical Examples from Modules 19-21
 
 ### Module 19: Services and Endpoints
 
@@ -282,6 +315,43 @@ kubectl get pods -n ingress-nginx -o custom-columns=NAME:.metadata.name,STATUS:.
 
 # Get node labels (used to fix ingress controller)
 kubectl get nodes -o custom-columns=NAME:.metadata.name,LABELS:.metadata.labels
+```
+
+### Module 21: Storage and Volumes
+
+```bash
+# Get PV details
+kubectl get pv -o custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage,STATUS:.status.phase,CLAIM:.spec.claimRef.name
+
+# Output example:
+# NAME               CAPACITY   STATUS      CLAIM
+# my-persistnt-vol   1Gi        Available   <none>
+# my-persistnt-vol   1Gi        Bound       my-pvc
+
+# Get PVC with bound volume
+kubectl get pvc -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,VOLUME:.spec.volumeName,CAPACITY:.status.capacity.storage
+
+# Output example:
+# NAME     STATUS    VOLUME             CAPACITY
+# my-pvc   Bound     my-persistnt-vol   1Gi
+
+# Get StorageClass details
+kubectl get sc -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner,RECLAIM:.reclaimPolicy,BINDING:.volumeBindingMode
+
+# Get volume mounts from pod
+kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].volumeMounts[*].mountPath}'
+
+# Get volume types in pod
+kubectl get pod shared-multi-container -o jsonpath='{range .spec.volumes[*]}{"Volume: "}{.name}{" Type: "}{.emptyDir}{.hostPath}{.persistentVolumeClaim}{"\n"}{end}'
+
+# Check PV reclaim policy
+kubectl get pv -o jsonpath='{.items[*].spec.persistentVolumeReclaimPolicy}'
+
+# Get PV access modes
+kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.accessModes[*]}{"\n"}{end}'
+
+# Get storage class of PVC
+kubectl get pvc -o jsonpath='{.items[*].spec.storageClassName}'
 ```
 
 ### Cross-Namespace DNS Testing (Module 19)
@@ -338,6 +408,9 @@ kubectl get svc -o json | jq -r '.items[] | "\(.metadata.name): \(.spec.clusterI
 
 # Check all namespaces for services
 kubectl get svc -A -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,TYPE:.spec.type,PORTS:.spec.ports[*].port --sort-by=.metadata.namespace
+
+# One-liner: Get all PVs and their claim status
+kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.phase}{"\t"}{.spec.claimRef.name}{"\n"}{end}'
 ```
 
 ---
@@ -372,9 +445,69 @@ Rules:
   magical-nginx.example.com   /     magical-nginx:80 (10.244.0.236:80)
 ```
 
+### Storage Output (Module 21)
+
+```bash
+$ kubectl get pv -o wide
+NAME               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    AGE   VOLUMEMODE
+my-persistnt-vol   1Gi        RWO            Recycle          Available           local-storage   21m   Filesystem
+
+$ kubectl get pvc -o wide
+NAME     STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS    AGE   VOLUMEMODE
+my-pvc   Pending                                      local-storage   11m   Filesystem
+
+# After pod created (binding happened):
+$ kubectl get pvc -o wide
+NAME     STATUS   VOLUME             CAPACITY   ACCESS MODES   STORAGECLASS    AGE   VOLUMEMODE
+my-pvc   Bound    my-persistnt-vol   1Gi        RWO            local-storage   16m   Filesystem
+
+$ kubectl get pv -o wide
+NAME               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM            STORAGECLASS    AGE   VOLUMEMODE
+my-persistnt-vol   1Gi        RWO            Recycle          Bound    default/my-pvc   local-storage   26m   Filesystem
+
+$ kubectl describe storageclass local-storage
+Name:            local-storage
+IsDefaultClass:  No
+Provisioner:           kubernetes.io/no-provisioner
+Parameters:            <none>
+AllowVolumeExpansion:  True
+MountOptions:          <none>
+ReclaimPolicy:         Delete
+VolumeBindingMode:     WaitForFirstConsumer
+
+$ kubectl describe pod shared-multi-container | grep -A 5 "Volumes:"
+Volumes:
+  html:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:
+    SizeLimit:  <unset>
+```
+
 ### Node Labels Output
 ```bash
 $ kubectl get node k8s --show-labels
 NAME   STATUS   ROLES           AGE   VERSION   LABELS
-k8s    Ready    control-plane   48d   v1.34.0   beta.kubernetes.io/arch=amd64,kubernetes.io/os=linux,minikube.k8s.io/primary=true,...
+k8s    Ready    control-plane   55d   v1.34.0   beta.kubernetes.io/arch=amd64,kubernetes.io/os=linux,minikube.k8s.io/primary=true,...
+```
+
+### Storage Lifecycle Outputs
+
+```bash
+# PVC pending (WaitForFirstConsumer)
+$ kubectl describe pvc my-pvc
+Events:
+  Type    Reason                Age   Message
+  ----    ------                ----  -------
+  Normal  WaitForFirstConsumer  12s   waiting for first consumer to be created before binding
+
+# After pod created (bound)
+$ kubectl get pvc
+NAME     STATUS   VOLUME             CAPACITY   ACCESS MODES   STORAGECLASS
+my-pvc   Bound    my-persistnt-vol   1Gi        RWO            local-storage
+
+# PV lifecycle states
+$ kubectl get pv
+NAME               CAPACITY   STATUS      # Can be: Available, Bound, Released, Failed
+my-persistnt-vol   1Gi        Available   # No claim
+my-persistnt-vol   1Gi        Bound       # Claimed by PVC
 ```
