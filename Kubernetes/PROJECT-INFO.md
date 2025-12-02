@@ -27,6 +27,7 @@
 **18:** Network Policies (Pod-level firewall rules)  
 **19:** Kubernetes Services (ClusterIP, NodePort, DNS, Cross-namespace)  
 **20:** Kubernetes Ingress (HTTP routing, Host-based routing, Ingress Controller)  
+**21:** Kubernetes Storage (Volumes, PersistentVolumes, StorageClass)
 
 ### Technologies Used
 
@@ -104,6 +105,17 @@
 ✅ Local hosts file configuration  
 ✅ Node label troubleshooting  
 
+**Storage & Persistence:**
+✅ Container filesystem (ephemeral nature)  
+✅ Volume types (emptyDir, hostPath, PVC)  
+✅ Volume lifetime and persistence  
+✅ Multi-container volume sharing  
+✅ StorageClass configuration  
+✅ PersistentVolume (PV) creation  
+✅ PersistentVolumeClaim (PVC) workflow  
+✅ Volume binding modes (WaitForFirstConsumer)  
+✅ Reclaim policies (Retain, Delete, Recycle)  
+
 **Troubleshooting:**
 ✅ Debugging CrashLoopBackOff  
 ✅ Fixing OOMKilled containers  
@@ -114,6 +126,7 @@
 ✅ Network policy testing  
 ✅ Disk space management  
 ✅ Ingress controller pod scheduling  
+✅ Storage unit formatting errors  
 
 ### Key Achievements
 
@@ -174,23 +187,34 @@
 - Configured browser access via local hosts file
 - Achieved professional URLs without port numbers
 
+**Storage & Persistence:**
+- Tested hostPath volume persistence across pod deletion
+- Proved emptyDir survives container restart but not pod deletion
+- Implemented multi-container volume sharing (debian writes, nginx serves)
+- Created complete PV/PVC architecture (StorageClass → PV → PVC → Pod)
+- Tested WaitForFirstConsumer binding mode
+- Observed Reclaim Policy behavior (PV lifecycle management)
+- Understood storage capacity matching (PVC gets PV capacity)
+
 **Debugging & Problem Solving:**
 - Fixed nginx CrashLoopBackOff (missing semicolons)
 - Debugged OOMKilled containers (memory limit exceeded)
 - Resolved volume mounting issues (subPath technique)
 - Fixed pod Pending issues (resource constraints)
 - Solved ingress controller node affinity mismatch
+- Fixed storage unit error (100mi → 100Mi)
 - Understood Exit Codes (0, 1, 127, 137, 143)
+- Used CrashLoopBackOff intentionally to demonstrate persistence
 - Tested Network Policy enforcement
 - Cleaned disk from 98% to 57% usage
 - Force-deleted terminating pods
 
 ### Repository Contents
 
-- **120 files** across 22 directories
-- **41 YAML configuration files** from hands-on practice
-- **20 README documentation files** explaining each project
-- **20 command reference files** for quick lookup
+- **129 files** across 23 directories
+- **50 YAML configuration files** from hands-on practice
+- **21 README documentation files** explaining each project
+- **21 command reference files** for quick lookup
 - **6 shell scripts** for automation
 - **4 markdown guides** for procedures
 
@@ -216,9 +240,12 @@
 ### Scaling & Networking (16-18)
 **Projects 16-18:** Deployments, Networking basics, and Policies
 
-### Services & Ingress (19-20) 🆕
+### Services & Ingress (19-20)
 **Project 19:** Kubernetes Services - Service types, DNS, endpoints  
 **Project 20:** Kubernetes Ingress - HTTP routing, ingress controller
+
+### Storage & Persistence (21)
+**Project 21:** Kubernetes Storage - Volumes, PV, PVC, persistence testing
 
 Each project includes:
 - Numbered YAML/script files (practice order)
@@ -321,26 +348,88 @@ Route multiple applications through single entry point with domain names.
 
 ---
 
+## 21. Kubernetes Storage & Volumes 💾
+
+**Focus:** Container filesystem, volumes, and persistent storage
+
+Master Kubernetes storage from ephemeral to persistent volumes.
+
+**What's Covered:**
+- Container filesystem (ephemeral nature)
+- hostPath volumes (node filesystem)
+- emptyDir volumes (pod lifetime)
+- Multi-container volume sharing
+- StorageClass configuration
+- PersistentVolume (PV) architecture
+- PersistentVolumeClaim (PVC) workflow
+- Volume binding modes and reclaim policies
+
+**Files:**
+```
+21-k8s-storage/
+├── 01-hostpath-volume-mount.yml        # hostPath with persistence demo
+├── 02-emptydir-volume-pod.yml          # Redis with emptyDir
+├── 03-common-volume.yml                # Multi-container volume sharing
+├── 04-storageclass-local-vol.yml       # StorageClass with WaitForFirstConsumer
+├── 05-persistent-vol.yml               # PersistentVolume (1Gi)
+├── 06-persistent-vol-claim.yml         # PersistentVolumeClaim (200Mi)
+├── 07-pvc-pod.yml                      # Pod using PVC
+├── README.md                           # Experiments and discoveries
+└── commands-reference.md               # Storage commands used
+```
+
+**Key Learnings:**
+- hostPath survives pod deletion, emptyDir doesn't
+- emptyDir survives container restart but not pod deletion
+- Multi-container pods can share volumes in real-time
+- PVC requests minimum storage, gets PV capacity
+- WaitForFirstConsumer delays binding until pod created
+- Reclaim policies control PV lifecycle after PVC deletion
+
+**Practical Skills:**
+- Created and tested hostPath volumes (data persisted across pod deletion)
+- Tested emptyDir lifecycle (container restart vs pod deletion)
+- Implemented multi-container volume sharing (debian writes, nginx serves)
+- Configured StorageClass with custom binding mode
+- Created PV/PVC architecture and tested binding process
+- Observed reclaim policy behavior (Available → Bound → Available)
+
+**Challenges Solved:**
+- **CrashLoopBackOff:** Used intentionally to demonstrate hostPath persistence across restarts
+- **Echo redirect error:** Fixed `echo "text >> file"` to `echo "text" >> file`
+- **Invalid storage unit:** Fixed `100mi` to `100Mi` (capital M, capital i)
+- **PVC Pending:** Understood WaitForFirstConsumer requires pod creation first
+
+**Key Experiments:**
+- Killed redis container (PID 1) → emptyDir survived ✅
+- Deleted/recreated pod → emptyDir lost, hostPath survived
+- Two containers writing to same file → Real-time sharing proven
+- PVC deleted → PV returned to Available (Recycle policy worked)
+
+---
+
 ## Hands-On Statistics
 
-- **Projects Completed:** 20
-- **YAML Files Created:** 120
+- **Projects Completed:** 21
+- **YAML Files Created:** 129
 - **Clusters Deployed:** 2 (1 single-node Minikube + 1 three-node AWS)
 - **Cluster Uptime:** 15+ days with multiple restarts
 - **Upgrade Phases:** 3 (across 3 major K8s versions)
 - **Deployment Revisions:** 7 (with rollbacks tested)
 - **Services Created:** 6 (ClusterIP, NodePort)
 - **Ingress Rules Configured:** 2 host-based routes
-- **Debugging Sessions:** Multiple (CrashLoopBackOff, OOMKilled, Pending, Node affinity, Network policies)
-- **Working Demos:** nginx auth, resource limits, rolling updates, Network Policies, Services, Ingress routing
+- **Storage Resources:** 1 StorageClass, 1 PV, 1 PVC
+- **Volume Types Tested:** 3 (hostPath, emptyDir, PVC)
+- **Debugging Sessions:** Multiple (CrashLoopBackOff, OOMKilled, Pending, Node affinity, Network policies, Storage units)
+- **Working Demos:** nginx auth, resource limits, rolling updates, Network Policies, Services, Ingress routing, Volume sharing
 
 ---
 
 ## 📊 Repository Statistics
 
-**Total Modules:** 20  
-**Total Directories:** 22  
-**Total Files:** 120  
+**Total Modules:** 21  
+**Total Directories:** 23  
+**Total Files:** 129  
 
 **Coverage:**
 - ✅ Cluster Setup (Minikube + Multi-node)
@@ -350,6 +439,7 @@ Route multiple applications through single entry point with domain names.
 - ✅ Scheduling (Selectors, Affinity, DaemonSets, Static Pods)
 - ✅ Workload Controllers (Deployments, ReplicaSets)
 - ✅ Networking (DNS, Services, Network Policies, Ingress)
+- ✅ Storage (Volumes, PersistentVolumes, StorageClass)
 
 **Skill Level:** Beginner → Advanced Kubernetes Administration
 
@@ -369,6 +459,8 @@ Advanced: Scheduling, Health Checks, Multi-container
 Networking: Services, DNS, Network Policies
   ↓
 Routing: Ingress Controller, HTTP routing
+  ↓
+Storage: Volumes, PV/PVC, Persistence
   ↓
 Result: Complete K8s administration skills! ✅
 ```
@@ -403,16 +495,23 @@ Result: Complete K8s administration skills! ✅
 - Ingress and HTTP routing
 - Network isolation
 
+**Storage:**
+- Volume types and persistence
+- PV/PVC architecture
+- Multi-container data sharing
+- Storage lifecycle management
+
 **Troubleshooting:**
 - Node affinity issues
 - DNS resolution problems
 - Service connectivity
 - Pod scheduling failures
+- Storage configuration errors
 
 ---
 
 *All configurations tested and verified working.*  
 *Demonstrates production-ready Kubernetes skills*
 
-**Last Updated:** November 25, 2024  
-**Total Learning Duration:** 25+ days of hands-on practice
+**Last Updated:** December 2, 2024  
+**Total Learning Duration:** 30+ days of hands-on practice
