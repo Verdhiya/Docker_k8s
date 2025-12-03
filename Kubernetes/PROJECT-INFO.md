@@ -396,8 +396,7 @@ Master Kubernetes storage from ephemeral to persistent volumes.
 
 **Challenges Solved:**
 - **CrashLoopBackOff:** Used intentionally to demonstrate hostPath persistence across restarts
-- **Echo redirect error:** Fixed `echo "text >> file"` to `echo "text" >> file`
-- **Invalid storage unit:** Fixed `100mi` to `100Mi` (capital M, capital i)
+- **Invalid storage unit:** Fixed `100mi` to `100Mi` (capital M)
 - **PVC Pending:** Understood WaitForFirstConsumer requires pod creation first
 
 **Key Experiments:**
