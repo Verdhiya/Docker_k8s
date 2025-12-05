@@ -511,3 +511,348 @@ NAME               CAPACITY   STATUS      # Can be: Available, Bound, Released, 
 my-persistnt-vol   1Gi        Available   # No claim
 my-persistnt-vol   1Gi        Bound       # Claimed by PVC
 ```
+
+---
+
+## AWS CLI Output Examples (Module 22)
+
+### AWS Credentials Verification
+```bash
+$ aws --version
+aws-cli/2.32.9 Python/3.13.9 Linux/6.14.0-1014-aws exe/x86_64.ubuntu.24
+
+$ aws sts get-caller-identity
+{
+    "UserId": "AIDAXXXXXXXXXXXXXXXXX",
+    "Account": "123456789012",
+    "Arn": "arn:aws:iam::123456789012:user/username"
+}
+```
+
+### S3 Bucket Operations
+```bash
+$ aws s3 ls
+2025-04-30 15:32:44 existing-bucket-1
+2025-12-04 15:14:25 helm-f6rdqusu
+
+$ aws s3 ls s3://helm-f6rdqusu/charts/
+                           PRE charts/
+2025-12-04 15:14:25         70 index.yaml
+
+$ aws s3 ls s3://helm-f6rdqusu/charts/ --recursive
+2025-12-04 15:44:18       4988 charts/hello-world-0.1.0.tgz
+2025-12-04 15:44:18        420 charts/index.yaml
+
+$ aws s3api get-bucket-versioning --bucket helm-f6rdqusu
+{
+    "Status": "Enabled"
+}
+```
+
+### S3 File Content
+```bash
+$ aws s3 cp s3://helm-f6rdqusu/charts/index.yaml - | cat
+apiVersion: v1
+entries:
+  hello-world:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2025-12-04T15:44:18.123456789Z"
+    description: A Helm chart for Kubernetes
+    digest: sha256:abc123...
+    name: hello-world
+    urls:
+    - charts/hello-world-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-12-04T15:44:18.987654321Z"
+```
+
+---
+
+## Helm Output Examples (Module 22)
+
+### Helm Version
+```bash
+$ helm version
+version.BuildInfo{Version:"v3.16.3", GitCommit:"cfd07493f46efc9debd9cc1b02a0961186df7fdf", GitTreeState:"clean", GoVersion:"go1.22.7"}
+```
+
+### Helm Plugin List
+```bash
+$ helm plugin list
+NAME    VERSION TYPE            APIVERSION      PROVENANCE      SOURCE
+s3      0.17.1  getter/v1       legacy          unknown         unknown
+
+# After wrapper created:
+$ helm-s3 version
+0.17.1
+```
+
+### Helm Repository Operations
+```bash
+$ helm repo list
+NAME            URL
+bitnami         https://charts.bitnami.com/bitnami
+sv-charts       s3://helm-f6rdqusu/charts
+
+$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "sv-charts" chart repository
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+
+$ helm search repo sv-charts
+NAME                      CHART VERSION   APP VERSION     DESCRIPTION
+sv-charts/hello-world     0.1.0           1.16.0          A Helm chart for Kubernetes
+
+$ helm search repo sv-charts/hello-world --versions
+NAME                      CHART VERSION   APP VERSION     DESCRIPTION
+sv-charts/hello-world     0.1.0           1.16.0          A Helm chart for Kubernetes
+```
+
+### helm-s3 Operations
+```bash
+$ helm-s3 init s3://helm-f6rdqusu/charts
+Initialized empty repository at s3://helm-f6rdqusu/charts
+
+$ helm-s3 push hello-world-0.1.0.tgz sv-charts
+Successfully uploaded the chart to the repository.
+
+$ helm-s3 push --force hello-world-0.1.0.tgz sv-charts
+Successfully uploaded the chart to the repository.
+```
+
+### Helm Chart Information
+```bash
+$ helm show chart sv-charts/hello-world
+apiVersion: v2
+appVersion: 1.16.0
+description: A Helm chart for Kubernetes
+name: hello-world
+type: application
+version: 0.1.0
+
+$ helm show values sv-charts/hello-world
+# Default values for hello-world.
+replicaCount: 2
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: "1.25"
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30080
+...
+
+$ helm show all sv-charts/hello-world
+# Shows both chart info and values
+```
+
+### Helm Release Management
+```bash
+$ helm install myapp sv-charts/hello-world
+NAME: myapp
+LAST DEPLOYED: Thu Dec  5 15:45:07 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services myapp-hello-world)
+  export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+
+$ helm ls
+NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+myapp   default         1               2025-12-05 15:45:07.123456789 +0000 UTC deployed        hello-world-0.1.0       1.16.0
+
+$ helm ls --all-namespaces
+NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+myapp   default         1               2025-12-05 15:45:07.123456789 +0000 UTC deployed        hello-world-0.1.0       1.16.0
+
+$ helm status myapp
+NAME: myapp
+LAST DEPLOYED: Thu Dec  5 15:45:07 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+...
+
+$ helm history myapp
+REVISION        UPDATED                         STATUS          CHART                   APP VERSION     DESCRIPTION
+1               Thu Dec  5 15:45:07 2025        deployed        hello-world-0.1.0       1.16.0          Install complete
+2               Thu Dec  5 16:10:23 2025        deployed        hello-world-0.1.0       1.16.0          Upgrade complete
+3               Thu Dec  5 16:15:44 2025        deployed        hello-world-0.1.0       1.16.0          Rollback to 1
+
+$ helm get values myapp
+USER-SUPPLIED VALUES:
+service:
+  nodePort: 30081
+
+$ helm get manifest myapp
+---
+# Source: hello-world/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-hello-world
+...
+```
+
+### Helm Upgrade and Rollback
+```bash
+$ helm upgrade myapp sv-charts/hello-world --set replicaCount=3
+Release "myapp" has been upgraded. Happy Helming!
+NAME: myapp
+LAST DEPLOYED: Thu Dec  5 16:10:23 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+
+$ helm rollback myapp 1
+Rollback was a success! Happy Helming!
+
+$ helm history myapp
+REVISION        UPDATED                         STATUS          CHART                   APP VERSION     DESCRIPTION
+1               Thu Dec  5 15:45:07 2025        superseded      hello-world-0.1.0       1.16.0          Install complete
+2               Thu Dec  5 16:10:23 2025        superseded      hello-world-0.1.0       1.16.0          Upgrade complete
+3               Thu Dec  5 16:15:44 2025        deployed        hello-world-0.1.0       1.16.0          Rollback to 1
+```
+
+### Helm Package
+```bash
+$ helm package hello-world/
+Successfully packaged chart and saved it to: /root/hello-world-0.1.0.tgz
+
+$ ls -lh hello-world-*.tgz
+-rw-r--r-- 1 root root 4.9K Dec  5 15:18 hello-world-0.1.0.tgz
+```
+
+### Helm Template Rendering
+```bash
+$ helm template myapp hello-world/ --dry-run
+---
+# Source: hello-world/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-hello-world
+...
+
+$ helm install myapp sv-charts/hello-world --dry-run --debug
+install.go:214: [debug] Original chart version: ""
+install.go:231: [debug] CHART PATH: /root/.cache/helm/repository/hello-world-0.1.0.tgz
+...
+```
+
+### Helm Errors and Warnings
+```bash
+$ helm install myapp sv-charts/hello-world
+Error: INSTALLATION FAILED: Service "myapp-hello-world" is invalid: spec.ports[0].nodePort: Invalid value: 30080: provided port is already allocated
+
+$ helm install myapp sv-charts/hello-world
+level=WARN msg="unable to find exact version; falling back to closest available version" chart=hello-world requested="" selected=0.1.0
+NAME: myapp
+...
+
+$ helm uninstall myapp
+release "myapp" uninstalled
+```
+
+### Helm with Kubernetes Integration
+```bash
+# After helm install
+$ kubectl get all -l app.kubernetes.io/instance=myapp
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/myapp-hello-world-64c86b877d-5x2fc   1/1     Running   0          55s
+pod/myapp-hello-world-64c86b877d-xsh8t   1/1     Running   0          55s
+
+NAME                      TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+service/myapp-hello-world NodePort   10.103.87.1   <none>        80:30081/TCP   55s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/myapp-hello-world   2/2     2            2           9m14s
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/myapp-hello-world-64c86b877d   2         2         2       55s
+
+$ kubectl get endpoints myapp-hello-world
+NAME                  ENDPOINTS
+myapp-hello-world     192.168.230.39:80,192.168.230.40:80
+
+$ kubectl describe svc myapp-hello-world | grep -A 5 Selector
+Selector:                 app.kubernetes.io/instance=myapp,app.kubernetes.io/name=hello-world
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.103.87.1
+IPs:                      10.103.87.1
+```
+
+### Combined Helm and Kubectl Verification
+```bash
+# Complete workflow verification
+$ helm ls
+NAME    NAMESPACE       REVISION        STATUS          CHART
+myapp   default         1               deployed        hello-world-0.1.0
+
+$ kubectl get all
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/myapp-hello-world-xxx               1/1     Running   0          2m
+
+NAME                        TYPE       CLUSTER-IP    PORT(S)
+service/myapp-hello-world   NodePort   10.103.87.1   80:30081/TCP
+
+NAME                                READY   UP-TO-DATE   AVAILABLE
+deployment.apps/myapp-hello-world   2/2     2            2
+
+NAME                                          DESIRED   CURRENT   READY
+replicaset.apps/myapp-hello-world-xxx         2         2         2
+
+$ curl http://localhost:30081
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+...
+</html>
+```
+
+---
+
+## Summary of Output Formats
+
+| Tool | Default Format | Alternative Formats |
+|------|----------------|-------------------|
+| kubectl | Table | `-o wide`, `-o yaml`, `-o json`, `-o jsonpath`, `-o custom-columns` |
+| helm | Human-readable | `--output yaml`, `--output json`, `--output table` |
+| aws | JSON (default) | `--output text`, `--output table`, `--output yaml` |
+| helm-s3 | Human-readable | N/A (uses helm's output) |
+
+---
+
+## Quick Reference: Getting Specific Information
+
+```bash
+# Kubernetes Resources
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+kubectl get svc -o custom-columns=NAME:.metadata.name,IP:.spec.clusterIP
+kubectl get pv -o jsonpath='{.items[*].status.phase}'
+
+# Helm Releases
+helm ls -o json | jq '.[] | {name: .name, status: .status, chart: .chart}'
+helm get values release-name -o json
+helm history release-name -o json
+
+# AWS S3
+aws s3 ls --output text
+aws s3api list-buckets --query 'Buckets[*].Name' --output text
+aws s3api get-bucket-versioning --bucket name --output yaml
+
+# helm-s3 (uses standard output)
+helm-s3 version
+```
