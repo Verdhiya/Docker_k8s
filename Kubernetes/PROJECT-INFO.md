@@ -28,7 +28,8 @@
 **19:** Kubernetes Services (ClusterIP, NodePort, DNS, Cross-namespace)  
 **20:** Kubernetes Ingress (HTTP routing, Host-based routing, Ingress Controller)  
 **21:** Kubernetes Storage (Volumes, PersistentVolumes, StorageClass)  
-**22:** Helm S3 Repository (Private chart repo, AWS S3, helm-s3 plugin)
+**22:** Helm S3 Repository (Private chart repo, AWS S3, helm-s3 plugin)  
+**23:** Microservices Platform (Food delivery app, API Gateway, HPA, Istio via Helm)
 
 ### Technologies Used
 
@@ -278,6 +279,9 @@
 
 ### Package Management (22)
 **Project 22:** Helm S3 Repository - Private chart repo, AWS S3, automation
+
+### Microservices (23)
+**Project 23:** Microservices Platform - Food delivery app, API Gateway, HPA, Istio via Helm
 
 Each project includes:
 - Numbered YAML/script files (practice order)
@@ -1567,9 +1571,71 @@ helm-s3 plugin installed as `getter/v1` instead of command plugin. Created wrapp
 
 ---
 
+## 23. Microservices Platform 🍔
+
+**Focus:** Multi-service application with API Gateway, auto-scaling, and service mesh
+
+Build a food-delivery platform as independent, separately-scalable microservices.
+
+**What's Covered:**
+- Independent microservice Deployments (one identity per service)
+- API Gateway pattern (NGINX reverse proxy, config from ConfigMap)
+- Service-to-service communication via Kubernetes DNS (ClusterIP)
+- Path-based routing (`/api/users`, `/api/restaurants`, `/api/orders`, `/api/payments`)
+- Single external entry point via NodePort
+- Horizontal Pod Autoscaler (CPU-based)
+- Installing Istio service mesh via Helm (3-chart approach)
+
+**Files:**
+```
+23-k8s-microservices/
+├── 01-user-service-dep-&-svc.yml         # User service (2 replicas) + ClusterIP
+├── 02-restaurant-service-dep-&-svc.yml   # Restaurant service (3 replicas) + ClusterIP
+├── 03-order-service-dep-&-svc.yml        # Order service (2 replicas) + ClusterIP
+├── 04-api-gateway-config-dep-svc.yml     # NGINX gateway: ConfigMap + Deployment + NodePort (30200)
+├── 05-payment-service-dep-&-svc.yml      # Payment service (3 replicas) + ClusterIP
+├── 06-restaurant-service-hpa.yml         # HPA: min 3, max 20, 70% CPU
+├── 07-install-istio-via-helm.sh          # Istio install: base → istiod → gateway
+└── README.md                             # Architecture and step-by-step guide
+```
+
+**Architecture:**
+```
+4 microservices + 1 API Gateway   (namespace: food-delivery)
+├── User Service        - 2 replicas (ClusterIP)
+├── Restaurant Service  - 3 replicas + HPA (ClusterIP)
+├── Order Service       - 2 replicas (ClusterIP)
+├── Payment Service     - 3 replicas (ClusterIP)
+└── API Gateway         - 1 replica  (NGINX, NodePort 30200)
+
+App pods: 10  |  Gateway pods: 1  |  Backends: hashicorp/http-echo
+```
+
+**Key Learnings:**
+- Each service is an independent Deployment — scaled and rolled out separately
+- API Gateway is the only externally exposed component; backends stay internal (ClusterIP)
+- Kubernetes DNS (`http://user-service/`) removes the need for hardcoded pod IPs
+- NGINX reads `nginx.conf` from a ConfigMap mounted via `subPath`
+- HPA needs both Metrics Server *and* CPU resource requests on target pods
+- Istio installs as 3 ordered Helm charts: base (CRDs) → istiod → gateway
+
+**Practical Skills:**
+- Deployed 4 backend microservices with ClusterIP services
+- Configured an NGINX API Gateway with path-based reverse-proxy routing
+- Exposed the platform externally via NodePort
+- Created an HPA for CPU-based auto-scaling (3–20 pods)
+- Scripted Istio service mesh installation via Helm
+
+**Real Achievement:**
+- **Before:** Monolithic, single-deployment thinking
+- **After:** Independent microservices behind a single gateway with auto-scaling
+- **Result:** Production-pattern microservices platform! 🍔
+
+---
+
 ## Hands-On Statistics
 
-- **Projects Completed:** 22
+- **Projects Completed:** 23
 - **YAML Files Created:** 146
 - **Clusters Deployed:** 2 (1 single-node Minikube + 1 three-node AWS)
 - **Cluster Uptime:** 15+ days with multiple restarts
@@ -1589,7 +1655,7 @@ helm-s3 plugin installed as `getter/v1` instead of command plugin. Created wrapp
 
 ## 📊 Repository Statistics
 
-**Total Modules:** 22  
+**Total Modules:** 23  
 **Total Directories:** 29  
 **Total Files:** 146  
 
@@ -1685,5 +1751,5 @@ Result: Complete K8s administration + DevOps skills! ✅
 *All configurations tested and verified working.*  
 *Demonstrates production-ready Kubernetes skills*
 
-**Last Updated:** December 5, 2024  
+**Last Updated:** June 15, 2026  
 **Total Learning Duration:** 30+ days of hands-on practice
