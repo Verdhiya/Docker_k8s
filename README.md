@@ -1089,6 +1089,7 @@ After:  9 pods with 2 containers each (18 containers)
 │   ├── 20-ingress/
 │   ├── 21-k8s-storage/
 │   ├── 22-helm-s3-kubernetes/
+│   ├── 23-k8s-microservices/
 │   ├── kubectl-commands-reference/
 │   ├── PROJECT-INFO.md
 │   └── README.md
