@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: food-delivery
+spec:
+  replicas: 3 # How many? (Think: payments are critical!)
+  selector:
+    matchLabels:
+      app: payment-service # What label?
+  template:
+    metadata:
+      labels:
+        app: payment-service # Same as selector
+    spec:
+      containers:
+        - name: payment-service
+          image: hashicorp/http-echo
+          args:
+            - "-text=Payment Service: Payment Done. Get your Order." # What should payment service say?
+            - "-listen=:8080"
+          ports:
+            - containerPort: 8080 # What port?
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service # Service name?
+  namespace: food-delivery
+spec:
+  selector:
+    app: payment-service # Match deployment label
+  ports:
+    - port: 80 # Service port?
+      targetPort: 8080 # Container port?

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: food-delivery
+  labels:
+    service: user
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: hashicorp/http-echo
+          args:
+            - "-text=User Service: Hello! I handle user authentication."
+            - "-listen=:8080"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: food-delivery
+spec:
+  selector:
+    app: user-service
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP

@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: food-delivery
+data:
+  nginx.conf: |
+    events {}
+    http {
+      server {
+        listen 80;
+        
+        location /api/users {
+          proxy_pass http://user-service/;
+        }
+        
+        location /api/restaurants {
+          proxy_pass http://restaurant-service/;
+        }
+        
+        location /api/orders {
+          proxy_pass http://order-service/;
+        }
+        
+        location /api/payments {
+          proxy_pass http://payment-service/;
+        }
+
+        location / {
+          return 200 'Food Delivery API - Endpoints: /api/users, /api/restaurants, /api/orders, /api/payments\n';
+          add_header Content-Type text/plain;
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: food-delivery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: config
+          configMap:
+            name: gateway-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: food-delivery
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30200
+  type: NodePort
